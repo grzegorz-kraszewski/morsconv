@@ -71,4 +71,18 @@ BOOL MorseGenSetup(struct MorseGen*, Tag tag0, ...);
 #define MA_WordsPerMinute  0x80000005
 #define MA_OutputFile      0x80000006
 
+/* Modules: count */
+
+#define MA_CounterStorage  0x80000007
+#define MA_CounterPrint    0x80000008
+
+/* indexes for the counter array (count module) */
+
+#define COUNTER_DOTS              0
+#define COUNTER_DASHES            1
+#define COUNTER_SYMBOL_PAUSES     2
+#define COUNTER_CHAR_PAUSES       3
+#define COUNTER_WORD_PAUSES       4
+
+
 #endif   /* TELEGRAPHIST_MORSEGEN_H */

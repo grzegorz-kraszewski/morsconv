@@ -5,6 +5,7 @@
 #include "main.h"
 #include "backend-stdout.h"
 #include "backend-8svx.h"
+#include "backend-count.h"
 
 struct Library
 	*IntuitionBase,
@@ -80,9 +81,10 @@ struct MorsMode
 
 const struct MorsMode Modes[] = 
 {
-	{ "CON",  CreateStdOutBackend },
-	{ "8SVX", CreateSvxBackend },
-	{ NULL, NULL }
+	{ "CON",     CreateStdOutBackend },
+	{ "8SVX",    CreateSvxBackend },
+	{ "COUNT",   CreateCountBackend },
+	{ NULL,      NULL }
 };
 
 static struct MorseGen* CreateGenerator(LONG *argvals)
@@ -116,14 +118,25 @@ ULONG Main(void)
 	if (OpenLibs())
 	{
 		struct RDArgs *args;
-		LONG argvals[4] = {
-		 0,                       /* TEXT */
-		 (LONG)"CON",             /* MODE */
-		 (LONG)".",               /* DOT */
-		 (LONG)"-"                /* DASH */
+
+		LONG numdefs[3] = {
+			8000,                    /* SAMPLERATE */
+			500,                     /* PITCH */
+			20                       /* WPM */
 		};
-		
-		if (args = ReadArgs("TEXT/A,MODE/K,DOT/K,DASH/K", argvals, NULL))
+
+		LONG argvals[8] = {
+			0,                       /* TEXT */
+			(LONG)"CON",             /* MODE */
+			(LONG)".",               /* DOT */
+			(LONG)"-",               /* DASH */
+		 	(LONG)&numdefs[0],       /* SAMPLERATE */
+		 	(LONG)&numdefs[1],       /* PITCH */
+		 	(LONG)&numdefs[2],       /* WPM */
+		 	0                        /* TO */
+		};
+
+		if (args = ReadArgs("TEXT/A,MODE/K,DOT/K,DASH/K,SAMPLERATE=SR/K/N,PITCH/K/N,WPM/K/N,TO/K", argvals, NULL))
 		{
 			struct MorseGen *mg;
 
@@ -132,14 +145,20 @@ ULONG Main(void)
 				if (MorseGenSetup(mg,
 					MA_DotText, argvals[2],
 					MA_DashText, argvals[3],
+					MA_SamplingRate, *(LONG*)argvals[4],
+					MA_TonePitch, *(LONG*)argvals[5],
+					MA_WordsPerMinute, *(LONG*)argvals[6],
+					MA_OutputFile, argvals[7],
+					MA_CounterPrint, TRUE,
 				TAG_END))
 				{					
 					MorseText(mg, (STRPTR)argvals[0]);
 				}
-			
+				else result = RETURN_ERROR;
+
 				mg->mg_Cleanup(mg);
 			}
-			else result = RETURN_FAIL;
+			else result = RETURN_ERROR;
 
 			FreeArgs(args);
 		}
