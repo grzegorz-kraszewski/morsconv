@@ -48,8 +48,8 @@ static BOOL StdOutSetup(struct MorseGen *mg, struct TagItem *taglist)
 	{
 		switch (tag->ti_Tag)
 		{
-			case MA_DotText:   somg->somg_ShortString = (STRPTR)tag->ti_Data;
-			case MA_DashText:  somg->somg_LongString = (STRPTR)tag->ti_Data;
+			case MA_DotText:   somg->somg_ShortString = (STRPTR)tag->ti_Data;  break;
+			case MA_DashText:  somg->somg_LongString = (STRPTR)tag->ti_Data;   break;
 		}
 	}
 	
