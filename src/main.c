@@ -81,7 +81,7 @@ ULONG Main(void)
 		struct RDArgs *args;
 		LONG argvals[3] = { 0, (LONG)".", (LONG)"-" };
 		
-		if (args = ReadArgs("TEXT/A,DOT,DASH", argvals, NULL))
+		if (args = ReadArgs("TEXT/A,DOT/K,DASH/K", argvals, NULL))
 		{
 			struct MorseGen *mg;
 
