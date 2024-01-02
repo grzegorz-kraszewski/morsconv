@@ -1,0 +1,21 @@
+Short:        Modular Morse code generator
+Uploader:     software@rastport.com (RastPort)
+Author:       software@rastport.com (RastPort)
+Type:         text/misc
+Version:      1.0
+Architecture: m68k-amigaos >= 3.0
+
+MorsConv is a modular Morse code generator. It is a shell command (has no
+GUI). Text to convert is given as the first argument. As Morse code has no
+concept of capital and small letters, all the text is automatically
+capitalized before conversion.
+
+MorsConv is an open source software hosted on GitHub. Repository is
+grzegorz-kraszewski/morsconv.
+
+For program usage see AmigaGuide file inside the archive.
+ 
+Version history
+
+1.0 (1.1.2024)
+  Initial release with only "con" output module.
