@@ -55,4 +55,20 @@ struct MorseGen
 LONG MorseText(struct MorseGen*, STRPTR);
 BOOL MorseGenSetup(struct MorseGen*, Tag tag0, ...);
 
+/*-----------------------------------*/
+/* control tags for Morse generators */
+/*-----------------------------------*/
+
+/* Modules: stdout */
+
+#define MA_DotText         0x80000001
+#define MA_DashText        0x80000002
+
+/* Modules: 8svx */
+
+#define MA_SamplingRate    0x80000003
+#define MA_TonePitch       0x80000004
+#define MA_WordsPerMinute  0x80000005
+#define MA_OutputFile      0x80000006
+
 #endif   /* TELEGRAPHIST_MORSEGEN_H */

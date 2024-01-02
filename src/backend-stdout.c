@@ -4,7 +4,6 @@
 
 #include "main.h"
 #include "morsegen.h"
-#include "backend-stdout.h"
 
 struct StdOutMorseGen
 {

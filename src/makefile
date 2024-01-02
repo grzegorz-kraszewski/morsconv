@@ -31,7 +31,7 @@ start.o: start.c
 
 # dependencies
 
-backend-stdout.o: backend-stdout.c main.h morsegen.h backend-stdout.h
+backend-stdout.o: backend-stdout.c main.h morsegen.h
 main.o: main.c main.h backend-stdout.h morsegen.h
 morsegen.o: morsegen.c main.h morsegen.h
 start.o: start.c
