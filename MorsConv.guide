@@ -1,10 +1,10 @@
 @DATABASE MorsConv.guide
-@$VER: MorsConv.guide 1.0 (1.1.2024)
+@$VER: MorsConv.guide 2.0 (2.1.2024)
 @AUTHOR: RastPort
 @WORDWRAP
 @WIDTH 80
 @NODE Main MorsConv.guide
-@{B}MorsConv 1.0@{UB}
+@{B}MorsConv 2.0@{UB}
 
 MorsConv is a modular Morse code generator. It can convert a text, given as commandline argument, to various forms of Morse code. MorsConv is a shell command, it has no GUI.
 
