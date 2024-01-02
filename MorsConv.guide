@@ -14,11 +14,15 @@ Copy MorsConv executable somewhere in your system command path (for example to C
 
 @{B}Usage@{UB}
 
+@{BG SHINE}MorsConv <text> [MODE=<module>] [module controls]@{BG BACKGROUND}
+
 The first argument of MorsConv is a text to convert. If the text contains spaces, it should be quoted. Morse code has no concept of small and capital letters, so text is automatically capitalized before conversion. Characters, which have no representation in Morse code, are skipped silently. Current version of MorsConv supports following set of characters:
 
 @{FG SHINE}!"$&'()+,-./0123456789:;=?@ABCDEFGHIJKLMNOPQRSTUVWXYZ_@{FG TEXT}
 
-Following optional arguments can be used to modify the output form of Morse code. Set of arguments available depends on selected output module. Note that in version 1.0 only CON module is available and is selected implicitly.
+MODE argument specifies output module to use. Module names are case insensitive. If MODE is omitted, CON module is the default.
+
+Following optional arguments can be used to modify the output form of Morse code. Set of arguments available depends on selected output module.
 
 @{B}Output modules@{UB}
 
@@ -26,11 +30,23 @@ Following optional arguments can be used to modify the output form of Morse code
 
 Prints textual representation of Morse code to the standard output. Usually it means the CLI window, MorsConv is launched in. Standard AmigaDOS output redirection may be used to write the Morse code to a file or other DOS device. CON output module supports following parameters:
 
-@{I}DOT @{UI}- specifies a string to be used for Morse code short symbol (dot). Default dot string is ".".
+DOT - specifies a string to be used for Morse code short symbol (dot). Default dot string is ".".
 
-@{I}DASH @{UI}- specifies a string to be used for Morse code long symbol (dash). Default dash string is "-".
+DASH - specifies a string to be used for Morse code long symbol (dash). Default dash string is "-".
 
 The CON module appends a newline character at the end of converted text.  
+
+@{FG SHINE}COUNT@{FG TEXT}
+
+Counts Morse code elements. It prints five integer numbers separated by spaces and ended by a newline:
+
+  1. Number of dots.
+  2. Number of dashes.
+  3. Number of symbol pauses (inside a character).
+  4. Number of character pauses (inside a word).
+  5. Number of word pauses.
+  
+Number of Morse characters can be calculated as @{I}character pauses @{UI}+ @{I}word pauses @{UI}+ 1. Note that skipped characters (having no representation in Morse code) are not counted. ASCII spaces are not counted as well, they are just word pauses.
 
 @{B}Examples@{UB}
 
@@ -53,4 +69,9 @@ Writing Morse code to a file in RamDisk.
 
 @{BG SHINE}MorsConv "foo bar" >RAM:morse.code
 @{I}<no output> @{UI}@{BG BACKGROUND}
+
+Counting Morse code elements.
+
+@{BG SHINE}MorsConv "foo bar" MODE=count
+9 10 13 4 1@{BG BACKGROUND}
 @ENDNODE
