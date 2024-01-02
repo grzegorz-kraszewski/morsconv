@@ -81,10 +81,36 @@ static void ParseTags(struct SvxMorseGen *mg, struct TagItem *taglist)
 }
 
 
+static BOOL OpenOutputIFF(struct SvxMorseGen *mg)
+{
+	return FALSE;
+}
+
+
+static BOOL OpenOutputFile(struct SvxMorseGen *mg)
+{
+	if (mg->smg_OutputPath)
+	{
+		Printf("IoErr = %ld.\n", IoErr());
+		
+		if (mg->smg_OutputFile = Open(mg->smg_OutputPath, MODE_NEWFILE))
+		{
+			Printf("IoErr2 = %ld.\n", IoErr());
+			return OpenOutputIFF(mg);
+			Close(mg->smg_OutputFile);
+			mg->smg_OutputFile = NULL;
+		}
+	}
+	else SetIoErr(ERROR_REQUIRED_ARG_MISSING);
+
+	return FALSE;
+}
+
+
 static BOOL RangeChecks(struct SvxMorseGen *mg)
 {
 	BOOL success = TRUE;
-	
+
 	if (mg->smg_SamplingRate < 1000) success = FALSE;
 	if (mg->smg_SamplingRate > 65535) success = FALSE;
 	if (mg->smg_TonePitch < 100) success = FALSE;
@@ -92,8 +118,9 @@ static BOOL RangeChecks(struct SvxMorseGen *mg)
 	if ((mg->smg_TonePitch << 1) > mg->smg_SamplingRate) success = FALSE;
 	if (mg->smg_WordsPerMinute < 5) success = FALSE;
 	if (mg->smg_WordsPerMinute > 100) success = FALSE;
-	if (!success) SetIoErr(ERROR_BAD_NUMBER);
-	return success;
+	if (success) return OpenOutputFile(mg);
+	SetIoErr(ERROR_BAD_NUMBER);
+	return FALSE;
 }
 
 
@@ -111,11 +138,6 @@ static BOOL SvxSetup(struct MorseGen *mg, struct TagItem *taglist)
 	Printf("Samples per dot = %ld.\n", smg->smg_SamplesPerDot);
 	buflen = SMult32(smg->smg_SamplesPerDot, 3);
 
-	if (!smg->smg_OutputPath)
-	{
-		SetIOErr(ERROR_REQUIRED_ARG_MISSING);
-		return FALSE;
-	}
 
 	if (smg->smg_OutputIFF = AllocIFF())
 	{
@@ -164,6 +186,7 @@ static void SvxCleanup(struct MorseGen *mg)
 {
 	struct SvxMorseGen *smg = (struct SvxMorseGen*)mg;
 
+	if (smg->smg_OutputFile) Close(smg->smg_OutputFile);
 	FreeMem(mg, sizeof(struct SvxMorseGen));
 }
 
