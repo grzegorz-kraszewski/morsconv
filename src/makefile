@@ -18,7 +18,7 @@ clean:
 
 devdoc:
 	Join $(SRCS) TO T:$(EXE).sources
-	RoboDoc T:$(EXE).sources $(EXE)-developer.guide GUIDE TOC SORT INTERNAL
+	RoboDoc T:$(EXE).sources $(EXE)-Dev.guide GUIDE TOC SORT INTERNAL
 	Delete T:$(EXE).sources
 
 start.o: start.c
@@ -31,7 +31,7 @@ start.o: start.c
 
 # dependencies
 
-main.o: main.c main.h morsegen.h backend-stdout.h
+backend-stdout.o: backend-stdout.c main.h morsegen.h backend-stdout.h
+main.o: main.c main.h backend-stdout.h morsegen.h
+morsegen.o: morsegen.c main.h morsegen.h
 start.o: start.c
-morsegen.o: morsegen.c
-audio.o: audio.c audio.h
