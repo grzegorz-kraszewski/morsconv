@@ -1,0 +1,56 @@
+@DATABASE MorsConv.guide
+@$VER: MorsConv.guide 1.0 (1.1.2024)
+@AUTHOR: RastPort
+@WORDWRAP
+@WIDTH 80
+@NODE Main MorsConv.guide
+@{B}MorsConv 1.0@{UB}
+
+MorsConv is a modular Morse code generator. It can convert a text, given as commandline argument, to various forms of Morse code. MorsConv is a shell command, it has no GUI.
+
+@{B}Installation@{UB}
+
+Copy MorsConv executable somewhere in your system command path (for example to C:). No additional installation is required.
+
+@{B}Usage@{UB}
+
+The first argument of MorsConv is a text to convert. If the text contains spaces, it should be quoted. Morse code has no concept of small and capital letters, so text is automatically capitalized before conversion. Characters, which have no representation in Morse code, are skipped silently. Current version of MorsConv supports following set of characters:
+
+@{FG SHINE}!"$&'()+,-./0123456789:;=?@ABCDEFGHIJKLMNOPQRSTUVWXYZ_@{FG TEXT}
+
+Following optional arguments can be used to modify the output form of Morse code. Set of arguments available depends on selected output module. Note that in version 1.0 only CON module is available and is selected implicitly.
+
+@{B}Output modules@{UB}
+
+@{FG SHINE}CON@{FG TEXT}
+
+Prints textual representation of Morse code to the standard output. Usually it means the CLI window, MorsConv is launched in. Standard AmigaDOS output redirection may be used to write the Morse code to a file or other DOS device. CON output module supports following parameters:
+
+@{I}DOT @{UI}- specifies a string to be used for Morse code short symbol (dot). Default dot string is ".".
+
+@{I}DASH @{UI}- specifies a string to be used for Morse code long symbol (dash). Default dash string is "-".
+
+The CON module appends a newline character at the end of converted text.  
+
+@{B}Examples@{UB}
+
+A simple case, using defaults.
+
+@{BG SHINE}MorsConv "foo bar"
+..-. --- ---   -... .- .-.@{BG BACKGROUND}
+
+Using different characters for dot and dash.
+
+@{BG SHINE}MorsConv "foo bar" DOT=o DASH="="
+oo=o === ===   =ooo o= o=o@{BG BACKGROUND}
+
+Using longer strings.
+
+@{BG SHINE}MorsConv "foo bar" DOT=di DASH=daa
+dididaadi daadaadaa daadaadaa   daadididi didaa didaadi@{BG BACKGROUND}
+
+Writing Morse code to a file in RamDisk.
+
+@{BG SHINE}MorsConv "foo bar" >RAM:morse.code
+@{I}<no output> @{UI}@{BG BACKGROUND}
+@ENDNODE
