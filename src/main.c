@@ -1,10 +1,10 @@
 #include <proto/exec.h>
-#include <proto/intuition.h>
 #include <proto/dos.h>
-#include <proto/graphics.h>
+#include <proto/utility.h>
 
 #include "main.h"
 #include "backend-stdout.h"
+#include "backend-8svx.h"
 
 struct Library
 	*IntuitionBase,
@@ -72,6 +72,43 @@ void CloseLibs(void)
 
 /*----------------------------------------------------------------------------*/
 
+struct MorsMode
+{
+	STRPTR mm_Name;
+	struct MorseGen*(*mm_Creator)(void);
+};
+
+const struct MorsMode Modes[] = 
+{
+	{ "CON",  CreateStdOutBackend },
+	{ "8SVX", CreateSvxBackend },
+	{ NULL, NULL }
+};
+
+static struct MorseGen* CreateGenerator(LONG *argvals)
+{
+	STRPTR modename = (STRPTR)argvals[1];
+	const struct MorsMode *mode;
+	struct MorseGen* generator = NULL;
+	
+	for (mode = Modes; mode->mm_Name; mode++)
+	{
+		if (Stricmp(mode->mm_Name, modename) == 0)
+		{
+			generator = mode->mm_Creator();
+			break;
+		}
+	}
+	
+	/* Set error if mode hasn't been found. */
+	
+	if (!mode->mm_Name) SetIoErr(ERROR_NOT_IMPLEMENTED);
+	return generator;
+}
+
+/*----------------------------------------------------------------------------*/
+
+
 ULONG Main(void)
 {
 	ULONG result = 0;
@@ -90,7 +127,7 @@ ULONG Main(void)
 		{
 			struct MorseGen *mg;
 
-			if (mg = CreateStdOutBackend())
+			if (mg = CreateGenerator(argvals))
 			{
 				if (MorseGenSetup(mg,
 					MA_DotText, argvals[2],
@@ -102,11 +139,7 @@ ULONG Main(void)
 			
 				mg->mg_Cleanup(mg);
 			}
-			else
-			{
-				SetIoErr(ERROR_NO_FREE_STORE);
-				result = RETURN_FAIL;
-			}
+			else result = RETURN_FAIL;
 
 			FreeArgs(args);
 		}
@@ -115,7 +148,7 @@ ULONG Main(void)
 		if (result != 0)
 		{
 			LONG syserror = IoErr();
-			if (syserror) PrintFault(syserror, "Telegraphist");
+			if (syserror) PrintFault(syserror, "MorsConv");
 		}		
 	}
 	else result = RETURN_FAIL;
