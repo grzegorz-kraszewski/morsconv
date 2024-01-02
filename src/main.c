@@ -79,17 +79,22 @@ ULONG Main(void)
 	if (OpenLibs())
 	{
 		struct RDArgs *args;
-		LONG argvals[3] = { 0, (LONG)".", (LONG)"-" };
+		LONG argvals[4] = {
+		 0,                       /* TEXT */
+		 (LONG)"CON",             /* MODE */
+		 (LONG)".",               /* DOT */
+		 (LONG)"-"                /* DASH */
+		};
 		
-		if (args = ReadArgs("TEXT/A,DOT/K,DASH/K", argvals, NULL))
+		if (args = ReadArgs("TEXT/A,MODE/K,DOT/K,DASH/K", argvals, NULL))
 		{
 			struct MorseGen *mg;
 
 			if (mg = CreateStdOutBackend())
 			{
 				if (MorseGenSetup(mg,
-					MA_DotText, argvals[1],
-					MA_DashText, argvals[2],
+					MA_DotText, argvals[2],
+					MA_DashText, argvals[3],
 				TAG_END))
 				{					
 					MorseText(mg, (STRPTR)argvals[0]);
