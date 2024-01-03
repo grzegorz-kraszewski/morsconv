@@ -1,9 +1,6 @@
 #include <proto/exec.h>
 #include <proto/dos.h>
 #include <proto/utility.h>
-#include <proto/iffparse.h>
-
-#include <exec/memory.h>
 
 #include "main.h"
 #include "morsegen.h"
