@@ -2,11 +2,14 @@
 #include <proto/dos.h>
 #include <proto/utility.h>
 #include <proto/iffparse.h>
+#include <proto/mathieeesingbas.h>
+#include <proto/mathieeesingtrans.h>
 
 #include <exec/memory.h>
 
 #include "main.h"
 #include "morsegen.h"
+
 
 struct SvxMorseGen
 {
@@ -15,7 +18,8 @@ struct SvxMorseGen
 	LONG smg_TonePitch;
 	LONG smg_WordsPerMinute;
 	LONG smg_SamplesPerDot;
-	BYTE *smg_DashSilence;
+	BYTE *smg_DotSilence;
+	BYTE *smg_DotTone;
 	BYTE *smg_DashTone;
 	STRPTR smg_OutputPath;
 	BPTR smg_OutputFile;
@@ -83,6 +87,12 @@ static void ParseTags(struct SvxMorseGen *mg, struct TagItem *taglist)
 
 static BOOL OpenOutputIFF(struct SvxMorseGen *mg)
 {
+	if (mg->smg_OutputIFF = AllocIFF())
+	{
+		Printf("IFF handle = $%08lx.\n", (LONG)mg->smg_OutputIFF);
+		return TRUE;
+	}
+	
 	return FALSE;
 }
 
@@ -91,18 +101,59 @@ static BOOL OpenOutputFile(struct SvxMorseGen *mg)
 {
 	if (mg->smg_OutputPath)
 	{
-		Printf("IoErr = %ld.\n", IoErr());
-		
 		if (mg->smg_OutputFile = Open(mg->smg_OutputPath, MODE_NEWFILE))
 		{
-			Printf("IoErr2 = %ld.\n", IoErr());
+			Printf("File $%08lx opened.\n", (LONG)mg->smg_OutputFile);
 			return OpenOutputIFF(mg);
-			Close(mg->smg_OutputFile);
-			mg->smg_OutputFile = NULL;
 		}
+		else SetErr(RETURN_ERROR, IoErr());
 	}
-	else SetIoErr(ERROR_REQUIRED_ARG_MISSING);
+	else SetErr(RETURN_ERROR, ERROR_REQUIRED_ARG_MISSING);
+	
+	return FALSE;
+}
 
+
+void GenerateTone(BYTE *buffer, LONG count, LONG samprate, LONG pitch)
+{
+	LONG i;
+	FLOAT step, fpitch;
+
+	step = IEEESPFlt(samprate);
+	step = IEEESPDiv(6.28318531f, step);
+	fpitch = IEEESPFlt(pitch);
+	step = IEEESPMul(step, fpitch);
+
+	for (i = 0; i < count; i++)
+	{
+		FLOAT x;
+
+		x = IEEESPFlt(i);
+		x = IEEESPMul(x, step);
+		x = IEEESPSin(x);
+		x = IEEESPMul(x, 127.0f);
+		*buffer++ = (BYTE)IEEESPFix(x);		
+	}
+}
+
+
+static BOOL PrepareBuffers(struct SvxMorseGen *mg)
+{
+	mg->smg_SamplesPerDot = SDivMod32(SMult32(mg->smg_SamplingRate, 6),
+		SMult32(mg->smg_WordsPerMinute, 5));
+
+	if (mg->smg_DotSilence = AllocVec(SMult32(mg->smg_SamplesPerDot, 5), MEMF_ANY | MEMF_CLEAR))
+	{
+		mg->smg_DotTone = mg->smg_DotSilence + mg->smg_SamplesPerDot;
+		mg->smg_DashTone = mg->smg_DotTone + mg->smg_SamplesPerDot;
+		GenerateTone(mg->smg_DotTone, mg->smg_SamplesPerDot, mg->smg_SamplingRate,
+			mg->smg_TonePitch);
+		GenerateTone(mg->smg_DashTone, SMult32(mg->smg_SamplesPerDot, 3), mg->smg_SamplingRate,
+			mg->smg_TonePitch);
+		return OpenOutputFile(mg);
+	}
+
+	SetErr(RETURN_ERROR, ERROR_NO_FREE_STORE);
 	return FALSE;
 }
 
@@ -118,8 +169,8 @@ static BOOL RangeChecks(struct SvxMorseGen *mg)
 	if ((mg->smg_TonePitch << 1) > mg->smg_SamplingRate) success = FALSE;
 	if (mg->smg_WordsPerMinute < 5) success = FALSE;
 	if (mg->smg_WordsPerMinute > 100) success = FALSE;
-	if (success) return OpenOutputFile(mg);
-	SetIoErr(ERROR_BAD_NUMBER);
+	if (success) return PrepareBuffers(mg);
+	SetErr(RETURN_ERROR, ERROR_BAD_NUMBER);
 	return FALSE;
 }
 
@@ -130,31 +181,6 @@ static BOOL SvxSetup(struct MorseGen *mg, struct TagItem *taglist)
 
 	ParseTags(smg, taglist);
 	return RangeChecks(smg);
-
-	#if 0	
-	
-	smg->smg_SamplesPerDot = SDivMod32(SMult32(smg->smg_SamplingRate, 6),
-		SMult32(smg->smg_WordsPerMinute, 5));
-	Printf("Samples per dot = %ld.\n", smg->smg_SamplesPerDot);
-	buflen = SMult32(smg->smg_SamplesPerDot, 3);
-
-
-	if (smg->smg_OutputIFF = AllocIFF())
-	{
-		if (smg->smg_OutputFile = Open(smg->smg_OutputPath, MODE_NEWFILE)
-		{
-		
-		if (smg->smg_DashSilence = AllocVec(buflen, MEMF_ANY | MEMF_CLEAR))
-		{
-			if (smg->smg_DashTone = AllocVec(buflen, MEMF_ANY))
-			{
-				GenerateTone(smg->smg_DashTone, buflen, smg->smg_SamplingRate, smg->smg_TonePitch);
-				return TRUE;
-			}
-		}
-	}
-	
-	#endif
 }
 
 
@@ -186,7 +212,9 @@ static void SvxCleanup(struct MorseGen *mg)
 {
 	struct SvxMorseGen *smg = (struct SvxMorseGen*)mg;
 
+	if (smg->smg_OutputIFF) FreeIFF(smg->smg_OutputIFF);
 	if (smg->smg_OutputFile) Close(smg->smg_OutputFile);
+	if (smg->smg_DotSilence) FreeVec(smg->smg_DotSilence);
 	FreeMem(mg, sizeof(struct SvxMorseGen));
 }
 
@@ -217,7 +245,6 @@ static void SvxCleanup(struct MorseGen *mg)
 static void SvxIntraSymbolPause(struct MorseGen *mg)
 {
 	struct SvxMorseGen *smg = (struct SvxMorseGen*)mg;
-	return;
 }
 
 
