@@ -28,3 +28,11 @@ struct Gui
 	WORD              g_WinHeight;
 	struct Rect       g_SampleView;
 };
+
+extern ULONG MorErr;
+
+
+static inline SetErr(LONG retval, LONG ecode)
+{
+	MorErr = (retval << 16) | ecode;
+}

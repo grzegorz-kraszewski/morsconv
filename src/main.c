@@ -7,6 +7,9 @@
 #include "backend-8svx.h"
 #include "backend-count.h"
 
+ULONG MorErr; /* global error var, return code in upper 16 bits, error code in lower 16 bits */
+
+
 struct Library
 	*IntuitionBase,
 	*GfxBase,
@@ -104,16 +107,35 @@ static struct MorseGen* CreateGenerator(LONG *argvals)
 	
 	/* Set error if mode hasn't been found. */
 	
-	if (!mode->mm_Name) SetIoErr(ERROR_NOT_IMPLEMENTED);
+	if (!mode->mm_Name) SetErr(RETURN_ERROR, ERROR_NOT_IMPLEMENTED);
 	return generator;
+}
+
+
+
+/*----------------------------------------------------------------------------*/
+
+LONG PrintMyFault()
+{
+	LONG err = MorErr & 0xFFFF;
+	LONG res = MorErr >> 16;
+
+	if (res > 0)
+	{
+		if (err > 0) PrintFault(err, "MorsConv");
+		else Printf("MorsConv: unknown error %ld\n", err);
+	}
+
+	return res;
 }
 
 /*----------------------------------------------------------------------------*/
 
-
 ULONG Main(void)
 {
-	ULONG result = 0;
+	LONG result;
+	
+	SetErr(RETURN_OK, 0);
 
 	if (OpenLibs())
 	{
@@ -154,21 +176,15 @@ ULONG Main(void)
 				{					
 					MorseText(mg, (STRPTR)argvals[0]);
 				}
-				else result = RETURN_ERROR;
 
 				mg->mg_Cleanup(mg);
 			}
-			else result = RETURN_ERROR;
 
 			FreeArgs(args);
 		}
-		else result = RETURN_ERROR;
-	
-		if (result != 0)
-		{
-			LONG syserror = IoErr();
-			if (syserror) PrintFault(syserror, "MorsConv");
-		}		
+		else SetErr(RETURN_ERROR, IoErr());
+
+		result = PrintMyFault();
 	}
 	else result = RETURN_FAIL;
 
