@@ -12,7 +12,6 @@ ULONG MorErr; /* global error var, return code in upper 16 bits, error code in l
 
 struct Library
 	*IntuitionBase,
-//	*GfxBase,
 	*UtilityBase,
 	*MathIeeeSingBasBase,
 	*MathIeeeSingTransBase,
@@ -30,7 +29,6 @@ struct LibHandle
 struct LibHandle Libraries[] = {
 	{ "intuition.library", 39, &IntuitionBase },
 	{ "utility.library", 39, &UtilityBase },
-//	{ "graphics.library", 39, &GfxBase },
 	{ "mathieeesingbas.library", 37, &MathIeeeSingBasBase },
 	{ "mathieeesingtrans.library", 37, &MathIeeeSingTransBase },
 	{ "iffparse.library", 39, &IFFParseBase },
@@ -132,13 +130,9 @@ BOOL GenerateMetrics(STRPTR text, LONG *metrics)
 {
 	struct MorseGen *counter;
 
-	Printf("GenerateMetrics();\n");
-
 	if (counter = CreateCountBackend())
 	{
 		BOOL result = FALSE;
-
-		Printf("counter = $%08lx.\n", (LONG)counter);
 
 		if (MorseGenSetup(counter,
 			MA_CounterStorage, (ULONG)metrics,
@@ -149,7 +143,6 @@ BOOL GenerateMetrics(STRPTR text, LONG *metrics)
 		}
 
 		counter->mg_Cleanup(counter);
-		Printf("%ld %ld %ld %ld %ld!\n", metrics[0], metrics[1], metrics[2], metrics[3], metrics[4]);
 		return result;
 	}
 	else SetErr(RETURN_ERROR, ERROR_NO_FREE_STORE);
@@ -194,7 +187,7 @@ ULONG Main(void)
 			{
 				LONG metrics[5];
 
-				if (mg->mg_NeedsMetrics && GenerateMetrics((STRPTR)argvals[0], metrics))
+				if (!mg->mg_NeedsMetrics || GenerateMetrics((STRPTR)argvals[0], metrics))
 				{
 					if (MorseGenSetup(mg,
 						MA_DotText, argvals[2],
