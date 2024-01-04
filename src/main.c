@@ -12,15 +12,11 @@ ULONG MorErr; /* global error var, return code in upper 16 bits, error code in l
 
 struct Library
 	*IntuitionBase,
-	*GfxBase,
+//	*GfxBase,
 	*UtilityBase,
 	*MathIeeeSingBasBase,
-	*MathIeeeSingTransBase;
-
-
-ULONG OpenMyWindow(struct Gui *g);
-ULONG TheLoop(struct Gui *g);
-ULONG GetScreen(void);
+	*MathIeeeSingTransBase,
+	*IFFParseBase;
 
 
 struct LibHandle
@@ -34,9 +30,10 @@ struct LibHandle
 struct LibHandle Libraries[] = {
 	{ "intuition.library", 39, &IntuitionBase },
 	{ "utility.library", 39, &UtilityBase },
-	{ "graphics.library", 39, &GfxBase },
+//	{ "graphics.library", 39, &GfxBase },
 	{ "mathieeesingbas.library", 37, &MathIeeeSingBasBase },
 	{ "mathieeesingtrans.library", 37, &MathIeeeSingTransBase },
+	{ "iffparse.library", 39, &IFFParseBase },
 	{ NULL, 0, NULL }
 };
 
