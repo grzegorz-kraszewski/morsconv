@@ -19,6 +19,7 @@
 *      void(*mg_InterWordPause)(struct MorseGen*);
 *      void(*mg_ShortTone)(struct MorseGen*);
 *      void(*mg_LongTone)(struct MorseGen*);
+*      BOOL mg_NeedsMetrics;
 *   };
 *
 * FUNCTION
@@ -37,6 +38,8 @@
 *   - mg_ShortTone, is a callback called by generator for emitting "dit"
 *     tone.
 *   - mg_LongTone, is a callback called by generator for emitting "dat" tone.
+*   - mg_NeedsMetrics, boolean flag set to TRUE if given backend has to
+*     precalculate its output size based on text to be converted later.
 *
 ******************************************************************************
 */
@@ -50,6 +53,7 @@ struct MorseGen
 	void(*mg_InterWordPause)(struct MorseGen*);
 	void(*mg_ShortTone)(struct MorseGen*);
 	void(*mg_LongTone)(struct MorseGen*);
+	BOOL mg_NeedsMetrics;
 };
 
 LONG MorseText(struct MorseGen*, STRPTR);

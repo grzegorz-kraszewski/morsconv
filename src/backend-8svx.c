@@ -16,6 +16,7 @@
 struct SvxMorseGen
 {
 	struct MorseGen mg;
+	LONG *smg_Metrics;
 	LONG smg_SamplingRate;
 	LONG smg_TonePitch;
 	LONG smg_WordsPerMinute;
@@ -104,6 +105,7 @@ static void ParseTags(struct SvxMorseGen *mg, struct TagItem *taglist)
 			case MA_TonePitch:       mg->smg_TonePitch = tag->ti_Data;            break;
 			case MA_WordsPerMinute:  mg->smg_WordsPerMinute = tag->ti_Data;       break;
 			case MA_OutputFile:      mg->smg_OutputPath = (STRPTR)tag->ti_Data;   break;
+			case MA_MorseMetrics:    mg->smg_Metrics = (LONG*)tag->ti_Data;       break;
 		}
 	}
 }
@@ -153,32 +155,15 @@ static BOOL WriteHeader(struct SvxMorseGen *mg, LONG samples)
 
 static BOOL CalculateAudioSize(struct SvxMorseGen *mg)
 {
-	LONG elements[5];
-	struct MorseGen *counter;
 	LONG samples = 0;
 
-	if (counter = CreateCountBackend())
-	{
-		if (MorseGenSetup(counter,
-			MA_CounterStorage, (ULONG)&elements,
-			MA_CounterPrint, TRUE,
-		TAG_END))
-		{
-			MorseText(counter, " TRZEBA NADAWAC WOLNIEJ TO WSZYSCY ZROZUMIEJA ");
-		}
-
-		counter->mg_Cleanup(counter);
-		samples += SMult32(elements[COUNTER_DOTS], mg->smg_SamplesPerDot);
-		samples += SMult32(elements[COUNTER_DASHES], SMult32(mg->smg_SamplesPerDot, 3));
-		samples += SMult32(elements[COUNTER_SYMBOL_PAUSES], mg->smg_SamplesPerDot);
-		samples += SMult32(elements[COUNTER_CHAR_PAUSES], SMult32(mg->smg_SamplesPerDot, 3));
-		samples += SMult32(elements[COUNTER_WORD_PAUSES], SMult32(mg->smg_SamplesPerDot, 7));
-		Printf("%ld audio samples total.\n", samples);
-		return WriteHeader(mg, samples);
-	}
-	else SetErr(RETURN_ERROR, ERROR_NO_FREE_STORE);
-
-	return FALSE;
+	samples += SMult32(mg->smg_Metrics[COUNTER_DOTS], mg->smg_SamplesPerDot);
+	samples += SMult32(mg->smg_Metrics[COUNTER_DASHES], SMult32(mg->smg_SamplesPerDot, 3));
+	samples += SMult32(mg->smg_Metrics[COUNTER_SYMBOL_PAUSES], mg->smg_SamplesPerDot);
+	samples += SMult32(mg->smg_Metrics[COUNTER_CHAR_PAUSES], SMult32(mg->smg_SamplesPerDot, 3));
+	samples += SMult32(mg->smg_Metrics[COUNTER_WORD_PAUSES], SMult32(mg->smg_SamplesPerDot, 7));
+	Printf("%ld audio samples total.\n", samples);
+	return WriteHeader(mg, samples);
 }
 
 
@@ -313,7 +298,14 @@ static BOOL SvxSetup(struct MorseGen *mg, struct TagItem *taglist)
 	struct SvxMorseGen *smg = (struct SvxMorseGen*)mg;
 
 	ParseTags(smg, taglist);
-	return RangeChecks(smg);
+
+	if (smg->smg_Metrics)
+	{
+		return RangeChecks(smg);
+	}
+	else SetErr(RETURN_ERROR, ERROR_REQUIRED_ARG_MISSING);
+	
+	return FALSE;
 }
 
 
@@ -554,6 +546,7 @@ struct MorseGen* CreateSvxBackend(void)
 		smg->mg.mg_InterWordPause = SvxInterWordPause;
 		smg->mg.mg_ShortTone = SvxShortTone;
 		smg->mg.mg_LongTone = SvxLongTone;
+		smg->mg.mg_NeedsMetrics = TRUE;
 		smg->smg_SamplingRate = 8000;
 		smg->smg_TonePitch = 500;
 		smg->smg_WordsPerMinute = 20;

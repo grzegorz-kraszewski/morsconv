@@ -43,18 +43,18 @@ BOOL OpenLibs(void)
 {
 	struct LibHandle *lih = Libraries;
 	BOOL success = TRUE;
-	
+
 	while (lih->lih_Name)
 	{
 		struct Library *lb;
-		
+
 		lb = OpenLibrary(lih->lih_Name, lih->lih_MinVer);
 		*lih->lih_Ptr = lb;
 		if (!lb) success = FALSE;
 		lih++;
 	}
-	
-	return success; 
+
+	return success;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -62,7 +62,7 @@ BOOL OpenLibs(void)
 void CloseLibs(void)
 {
 	struct LibHandle *lih = Libraries;
-	
+
 	while (lih->lih_Name)
 	{
 		if (*lih->lih_Ptr) CloseLibrary(*lih->lih_Ptr);
@@ -79,7 +79,7 @@ struct MorsMode
 	struct MorseGen*(*mm_Creator)(void);
 };
 
-const struct MorsMode Modes[] = 
+const struct MorsMode Modes[] =
 {
 	{ "CON",     CreateStdOutBackend },
 	{ "8SVX",    CreateSvxBackend },
@@ -92,7 +92,7 @@ static struct MorseGen* CreateGenerator(LONG *argvals)
 	STRPTR modename = (STRPTR)argvals[1];
 	const struct MorsMode *mode;
 	struct MorseGen* generator = NULL;
-	
+
 	for (mode = Modes; mode->mm_Name; mode++)
 	{
 		if (Stricmp(mode->mm_Name, modename) == 0)
@@ -101,9 +101,9 @@ static struct MorseGen* CreateGenerator(LONG *argvals)
 			break;
 		}
 	}
-	
+
 	/* Set error if mode hasn't been found. */
-	
+
 	if (!mode->mm_Name) SetErr(RETURN_ERROR, ERROR_NOT_IMPLEMENTED);
 	return generator;
 }
@@ -128,10 +128,41 @@ LONG PrintMyFault()
 
 /*----------------------------------------------------------------------------*/
 
+BOOL GenerateMetrics(STRPTR text, LONG *metrics)
+{
+	struct MorseGen *counter;
+
+	Printf("GenerateMetrics();\n");
+
+	if (counter = CreateCountBackend())
+	{
+		BOOL result = FALSE;
+
+		Printf("counter = $%08lx.\n", (LONG)counter);
+
+		if (MorseGenSetup(counter,
+			MA_CounterStorage, (ULONG)metrics,
+		TAG_END))
+		{
+			MorseText(counter, text);
+			result = TRUE;
+		}
+
+		counter->mg_Cleanup(counter);
+		Printf("%ld %ld %ld %ld %ld!\n", metrics[0], metrics[1], metrics[2], metrics[3], metrics[4]);
+		return result;
+	}
+	else SetErr(RETURN_ERROR, ERROR_NO_FREE_STORE);
+
+	return FALSE;
+}
+
+/*----------------------------------------------------------------------------*/
+
 ULONG Main(void)
 {
 	LONG result;
-	
+
 	SetErr(RETURN_OK, 0);
 
 	if (OpenLibs())
@@ -161,17 +192,23 @@ ULONG Main(void)
 
 			if (mg = CreateGenerator(argvals))
 			{
-				if (MorseGenSetup(mg,
-					MA_DotText, argvals[2],
-					MA_DashText, argvals[3],
-					MA_SamplingRate, *(LONG*)argvals[4],
-					MA_TonePitch, *(LONG*)argvals[5],
-					MA_WordsPerMinute, *(LONG*)argvals[6],
-					MA_OutputFile, argvals[7],
-					MA_CounterPrint, TRUE,
-				TAG_END))
-				{					
-					MorseText(mg, (STRPTR)argvals[0]);
+				LONG metrics[5];
+
+				if (mg->mg_NeedsMetrics && GenerateMetrics((STRPTR)argvals[0], metrics))
+				{
+					if (MorseGenSetup(mg,
+						MA_DotText, argvals[2],
+						MA_DashText, argvals[3],
+						MA_SamplingRate, *(LONG*)argvals[4],
+						MA_TonePitch, *(LONG*)argvals[5],
+						MA_WordsPerMinute, *(LONG*)argvals[6],
+						MA_OutputFile, argvals[7],
+						MA_CounterPrint, TRUE,
+						MA_MorseMetrics, (ULONG)metrics,
+					TAG_END))
+					{
+						MorseText(mg, (STRPTR)argvals[0]);
+					}
 				}
 
 				mg->mg_Cleanup(mg);

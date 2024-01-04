@@ -276,6 +276,7 @@ struct MorseGen* CreateStdOutBackend(void)
 		somg->mg.mg_InterWordPause = StdOutInterWordPause;
 		somg->mg.mg_ShortTone = StdOutShortTone;
 		somg->mg.mg_LongTone = StdOutLongTone;
+		somg->mg.mg_NeedsMetrics = FALSE;
 		somg->somg_ShortString = ".";
 		somg->somg_LongString = "-";
 	}

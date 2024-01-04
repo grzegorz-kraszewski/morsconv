@@ -311,6 +311,7 @@ struct MorseGen* CreateCountBackend(void)
 		cmg->mg.mg_InterWordPause = CountInterWordPause;
 		cmg->mg.mg_ShortTone = CountShortTone;
 		cmg->mg.mg_LongTone = CountLongTone;
+		cmg->mg.mg_NeedsMetrics = FALSE;
 	}
 	
 	return &cmg->mg;
