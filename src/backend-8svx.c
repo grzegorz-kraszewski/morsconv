@@ -12,6 +12,7 @@
 #include "backend-count.h"
 
 
+
 struct SvxMorseGen
 {
 	struct MorseGen mg;
@@ -30,8 +31,8 @@ struct SvxMorseGen
 	BOOL smg_IFFOpened;
 	BOOL smg_FormPushed;
 	BOOL smg_BodyPushed;
-};	
-	
+};
+
 
 #define ID_8SVX MAKE_ID('8','S','V','X')
 #define ID_VHDR MAKE_ID('V','H','D','R')
@@ -70,9 +71,9 @@ struct Vhdr
 *       Default value is 8000 Hz. Allowed range: 1000 to 65535 Hz.
 *     MA_TonePitch - tone pitch of Morse symbols. Default value is 500 Hz.
 *       Allowed range is 100 to 8000 Hz with additional requirement, that
-*       pitch cannot be higher than half of the sampling rate. 
+*       pitch cannot be higher than half of the sampling rate.
 *     MA_WordsPerMinute - Morse code speed based on PARIS word. Defaults to
-*       20 wpm. Allowed range: 5 to 100 wpm. 
+*       20 wpm. Allowed range: 5 to 100 wpm.
 *
 * INPUTS
 *   morsegen - control structure.
@@ -115,7 +116,7 @@ static BOOL CreateBody(struct SvxMorseGen *mg, LONG samples)
 		mg->smg_BodyPushed = TRUE;
 		return TRUE;
 	}
-	
+
 	return FALSE;
 }
 
@@ -123,7 +124,7 @@ static BOOL CreateBody(struct SvxMorseGen *mg, LONG samples)
 static BOOL WriteHeader(struct SvxMorseGen *mg, LONG samples)
 {
 	struct Vhdr h;
-	
+
 	h.OneShotHiSamples = samples;
 	h.RepeatHiSamples = 0;
 	h.SamplesPerHiCycle = 0;
@@ -131,7 +132,7 @@ static BOOL WriteHeader(struct SvxMorseGen *mg, LONG samples)
 	h.Octave = 1;
 	h.Compression = 0;
 	h.Volume = 0x10000;
-	
+
 	if (PushChunk(mg->smg_OutputIFF, ID_8SVX, ID_FORM, IFFSIZE_UNKNOWN) == 0)
 	{
 		mg->smg_FormPushed = TRUE;
@@ -144,7 +145,7 @@ static BOOL WriteHeader(struct SvxMorseGen *mg, LONG samples)
 			}
 		}
 	}
-	
+
 	return FALSE;
 }
 
@@ -155,7 +156,7 @@ static BOOL CalculateAudioSize(struct SvxMorseGen *mg)
 	LONG elements[5];
 	struct MorseGen *counter;
 	LONG samples = 0;
-	
+
 	if (counter = CreateCountBackend())
 	{
 		if (MorseGenSetup(counter,
@@ -165,7 +166,7 @@ static BOOL CalculateAudioSize(struct SvxMorseGen *mg)
 		{
 			MorseText(counter, " TRZEBA NADAWAC WOLNIEJ TO WSZYSCY ZROZUMIEJA ");
 		}
-	
+
 		counter->mg_Cleanup(counter);
 		samples += SMult32(elements[COUNTER_DOTS], mg->smg_SamplesPerDot);
 		samples += SMult32(elements[COUNTER_DASHES], SMult32(mg->smg_SamplesPerDot, 3));
@@ -176,7 +177,7 @@ static BOOL CalculateAudioSize(struct SvxMorseGen *mg)
 		return WriteHeader(mg, samples);
 	}
 	else SetErr(RETURN_ERROR, ERROR_NO_FREE_STORE);
-	
+
 	return FALSE;
 }
 
@@ -214,7 +215,7 @@ static BOOL OpenOutputFile(struct SvxMorseGen *mg)
 		else SetErr(RETURN_ERROR, IoErr());
 	}
 	else SetErr(RETURN_ERROR, ERROR_REQUIRED_ARG_MISSING);
-	
+
 	return FALSE;
 }
 
@@ -237,7 +238,7 @@ void GenerateTone(BYTE *buffer, LONG count, LONG samprate, LONG pitch)
 		x = IEEESPMul(x, step);
 		x = IEEESPSin(x);
 		x = IEEESPMul(x, 127.0f);
-		*buffer++ = (BYTE)IEEESPFix(x);		
+		*buffer++ = (BYTE)IEEESPFix(x);
 	}
 }
 
@@ -246,13 +247,13 @@ void ApplyEnvelope(BYTE *buffer, LONG count, LONG attack, LONG release)
 {
 	LONG i;
 	BYTE *p, s;
-	
+
 	for (p = buffer, i = 0; i < attack; i++)
 	{
 		s = *p;
 		*p++ = div16(mul16(s, i), attack);
 	}
-	
+
 	for (p = buffer + count - release, i = release - 1; i >= 0; i--)
 	{
 		s = *p;
@@ -265,10 +266,10 @@ static BOOL PrepareBuffers(struct SvxMorseGen *mg)
 {
 	LONG attack_msec = 2;
 	LONG release_msec = 16;
-	
+
 	mg->smg_SamplesPerDot = SDivMod32(SMult32(mg->smg_SamplingRate, 6),
 		SMult32(mg->smg_WordsPerMinute, 5));
-		
+
 	mg->smg_AttackSamples = SDivMod32(SMult32(mg->smg_SamplingRate, attack_msec), 1000);
 	mg->smg_ReleaseSamples = SDivMod32(SMult32(mg->smg_SamplingRate, release_msec), 1000);
 
@@ -344,9 +345,12 @@ static void SvxCleanup(struct MorseGen *mg)
 {
 	struct SvxMorseGen *smg = (struct SvxMorseGen*)mg;
 
+<<<<<<< HEAD
 	if (smg->smg_BodyPushed) PopChunk(smg->smg_OutputIFF);  /* BODY */
 	if (smg->smg_FormPushed) PopChunk(smg->smg_OutputIFF);  /* FORM */
 	if (smg->smg_IFFOpened) CloseIFF(smg->smg_OutputIFF);
+=======
+>>>>>>> 0847c7799c5602410eaf8c5aadb3c67938aa1f62
 	if (smg->smg_OutputIFF) FreeIFF(smg->smg_OutputIFF);
 	if (smg->smg_OutputFile) Close(smg->smg_OutputFile);
 	if (smg->smg_DotSilence) FreeVec(smg->smg_DotSilence);
@@ -380,7 +384,7 @@ static void SvxCleanup(struct MorseGen *mg)
 static void SvxIntraSymbolPause(struct MorseGen *mg)
 {
 	struct SvxMorseGen *smg = (struct SvxMorseGen*)mg;
-	
+
 	WriteChunkBytes(smg->smg_OutputIFF, smg->smg_DotSilence, smg->smg_SamplesPerDot);
 }
 
@@ -411,7 +415,7 @@ static void SvxInterSymbolPause(struct MorseGen *mg)
 {
 	struct SvxMorseGen *smg = (struct SvxMorseGen*)mg;
 	WORD i;
-	
+
 	for (i = 0; i < 3; i++)
 	{
 		WriteChunkBytes(smg->smg_OutputIFF, smg->smg_DotSilence, smg->smg_SamplesPerDot);
@@ -444,7 +448,7 @@ static void SvxInterWordPause(struct MorseGen *mg)
 {
 	struct SvxMorseGen *smg = (struct SvxMorseGen*)mg;
 	WORD i;
-	
+
 	for (i = 0; i < 7; i++)
 	{
 		WriteChunkBytes(smg->smg_OutputIFF, smg->smg_DotSilence, smg->smg_SamplesPerDot);
@@ -541,9 +545,9 @@ static void SvxLongTone(struct MorseGen *mg)
 struct MorseGen* CreateSvxBackend(void)
 {
 	struct SvxMorseGen *smg;
-	
+
 	smg = (struct SvxMorseGen*)AllocMem(sizeof(struct SvxMorseGen), MEMF_ANY | MEMF_CLEAR);
-	
+
 	if (smg)
 	{
 		smg->mg.mg_Setup = SvxSetup;
@@ -557,6 +561,6 @@ struct MorseGen* CreateSvxBackend(void)
 		smg->smg_TonePitch = 500;
 		smg->smg_WordsPerMinute = 20;
 	}
-	
+
 	return &smg->mg;
 }
