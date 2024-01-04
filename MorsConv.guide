@@ -3,40 +3,53 @@
 @AUTHOR: RastPort
 @WORDWRAP
 @WIDTH 80
-@NODE Main MorsConv.guide
+@NODE Main "MorsConv"
 @{B}MorsConv 2.0@{UB}
 
 MorsConv is a modular Morse code generator. It can convert a text, given as commandline argument, to various forms of Morse code. MorsConv is a shell command, it has no GUI.
 
 @{B}Installation@{UB}
 
-Copy MorsConv executable somewhere in your system command path (for example to C:). No additional installation is required.
+Copy MorsConv executable somewhere in your system command path (for example to C:).
 
 @{B}Usage@{UB}
 
-@{BG SHINE}MorsConv <text> [MODE=<module>] [module controls]@{BG BACKGROUND}
+@{FG SHINE}MorsConv <text> [MODE=<module>] [module controls]@{FG TEXT}
 
 The first argument of MorsConv is a text to convert. If the text contains spaces, it should be quoted. Morse code has no concept of small and capital letters, so text is automatically capitalized before conversion. Characters, which have no representation in Morse code, are skipped silently. Current version of MorsConv supports following set of characters:
 
 @{FG SHINE}!"$&'()+,-./0123456789:;=?@ABCDEFGHIJKLMNOPQRSTUVWXYZ_@{FG TEXT}
 
-MODE argument specifies output module to use. Module names are case insensitive. If MODE is omitted, CON module is the default.
+MODE argument specifies output mode to use. Mode names are case insensitive. If MODE is omitted, CON mode is the default.
 
-Following optional arguments can be used to modify the output form of Morse code. Set of arguments available depends on selected output module.
+Following optional arguments can be used to modify the output form of Morse code. Set of arguments available depends on selected output mode.
 
-@{B}Output modules@{UB}
+@{B}Output modes@{UB}
 
-@{FG SHINE}CON@{FG TEXT}
+  @{" CON   " LINK modcon}  Replaces Morse code elements with texts.
+  @{" COUNT " LINK modcount}  Counts Morse code elements.
+  @{" 8SVX  " LINK mod8svx}  Generates IFF 8SVX audio file.
 
-Prints textual representation of Morse code to the standard output. Usually it means the CLI window, MorsConv is launched in. Standard AmigaDOS output redirection may be used to write the Morse code to a file or other DOS device. CON output module supports following parameters:
+@ENDNODE
+@NODE modcon "CON mode"
+@{B}CON@{UB}
+
+Prints textual representation of Morse code to the standard output. Usually it means the CLI window, MorsConv is launched in. Standard AmigaDOS output redirection may be used to write the Morse code to a file or other DOS device.
+
+@{B}Control arguments@{UB}
 
 DOT - specifies a string to be used for Morse code short symbol (dot). Default dot string is ".".
 
 DASH - specifies a string to be used for Morse code long symbol (dash). Default dash string is "-".
 
-The CON module appends a newline character at the end of converted text.  
+@{B}Notes@{UB}
 
-@{FG SHINE}COUNT@{FG TEXT}
+The CON mode appends a newline character at the end of converted text. In the current version of MorsConv symbol pause is ignored, character pause is one space, word pause is three spaces.
+
+Strings may be longer than one character.
+@ENDNODE
+@NODE modcount "COUNT mode"
+@{B}COUNT@{UB}
 
 Counts Morse code elements. It prints five integer numbers separated by spaces and ended by a newline:
 
@@ -45,9 +58,41 @@ Counts Morse code elements. It prints five integer numbers separated by spaces a
   3. Number of symbol pauses (inside a character).
   4. Number of character pauses (inside a word).
   5. Number of word pauses.
+
+@{B}Control arguments@{UB}
+
+None.
+
+@{B}Notes@{UB}
   
 Number of Morse characters can be calculated as @{I}character pauses @{UI}+ @{I}word pauses @{UI}+ 1. Note that skipped characters (having no representation in Morse code) are not counted. ASCII spaces are not counted as well, they are just word pauses.
+@ENDNODE
+@NODE mod8svx "8SVX mode"
+@{B}8SVX@{UB}
 
+Generates IFF 8SVX audio file (mono, 8-bit) with Morse code. Audio preserves standard timings with option of extending character and word pauses (Farnsworth method). Sine waveform is used. An ASR envelope is applied to each symbol.
+
+@{B}Control arguments@{UB}
+
+TO - Output file name. Required.
+
+SAMPLERATE=SR - Sampling rate of audio in Hz. Optional. Allowed range: 1000 - 65536. Default: 8000.
+
+PITCH - Tone pitch in Hz. Optional. Allowed range: 100 - 8000. Default: 500. Additional upper limit is sampling rate / 4.
+
+WPM - Speed of the code in words per minute, based on PARIS word. Optional. Allowed range: 5 - 100. Default 20.
+
+REALWPM - Real speed of the code in words per minute, used in Farnsworth timing. When in use, characters are sent at WPM, but character and word pauses are expanded to obtain REALWPM effective speed. Optional, defaults to WPM. Allowed range: 5 - 100 and must be less than WPM.
+
+ATTACK - Attack phase of the symbol envelope in miliseconds. Optional. Allowed range: 0 - 50. Default 0.
+
+RELEASE - Release phase of the symbol envelope in miliseconds. Optional. Allowed range: 0 - 50. Default 1.
+ 
+@{B}Notes@{UB}
+
+Each symbol starts at sine zero crossing. An end of a symbol may be not at zero crossing, and the wave is cut hard. It creates a nasty click. That is why default envelope release time is set to 1 ms, not 0, so the click is suppressed.
+@ENDNODE
+@NODE x
 @{B}Examples@{UB}
 
 A simple case, using defaults.
