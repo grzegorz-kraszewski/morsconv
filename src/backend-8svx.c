@@ -345,12 +345,9 @@ static void SvxCleanup(struct MorseGen *mg)
 {
 	struct SvxMorseGen *smg = (struct SvxMorseGen*)mg;
 
-<<<<<<< HEAD
 	if (smg->smg_BodyPushed) PopChunk(smg->smg_OutputIFF);  /* BODY */
 	if (smg->smg_FormPushed) PopChunk(smg->smg_OutputIFF);  /* FORM */
 	if (smg->smg_IFFOpened) CloseIFF(smg->smg_OutputIFF);
-=======
->>>>>>> 0847c7799c5602410eaf8c5aadb3c67938aa1f62
 	if (smg->smg_OutputIFF) FreeIFF(smg->smg_OutputIFF);
 	if (smg->smg_OutputFile) Close(smg->smg_OutputFile);
 	if (smg->smg_DotSilence) FreeVec(smg->smg_DotSilence);
