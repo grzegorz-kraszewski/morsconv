@@ -284,7 +284,7 @@ static BOOL RangeChecks(struct SvxMorseGen *mg)
 	if (mg->smg_SamplingRate > 65535) success = FALSE;
 	if (mg->smg_TonePitch < 100) success = FALSE;
 	if (mg->smg_TonePitch > 8000) success = FALSE;
-	if ((mg->smg_TonePitch << 1) > mg->smg_SamplingRate) success = FALSE;
+	if ((mg->smg_TonePitch << 2) > mg->smg_SamplingRate) success = FALSE;
 	if (mg->smg_WordsPerMinute < 5) success = FALSE;
 	if (mg->smg_WordsPerMinute > 100) success = FALSE;
 	if (success) return PrepareBuffers(mg);
