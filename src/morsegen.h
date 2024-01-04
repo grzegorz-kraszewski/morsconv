@@ -61,20 +61,15 @@ BOOL MorseGenSetup(struct MorseGen*, Tag tag0, ...);
 
 /* Modules: stdout */
 
-#define MA_DotText         0x80000001
-#define MA_DashText        0x80000002
-
-/* Modules: 8svx */
-
-#define MA_SamplingRate    0x80000003
-#define MA_TonePitch       0x80000004
-#define MA_WordsPerMinute  0x80000005
-#define MA_OutputFile      0x80000006
-
-/* Modules: count */
-
-#define MA_CounterStorage  0x80000007
-#define MA_CounterPrint    0x80000008
+#define MA_DotText         0x80000001   /* CON */
+#define MA_DashText        0x80000002   /* CON */
+#define MA_SamplingRate    0x80000003   /* 8SVX */
+#define MA_TonePitch       0x80000004   /* 8SVX */
+#define MA_WordsPerMinute  0x80000005   /* 8SVX */
+#define MA_OutputFile      0x80000006   /* 8SVX */
+#define MA_CounterStorage  0x80000007   /* COUNT */
+#define MA_CounterPrint    0x80000008   /* COUNT */
+#define MA_MorseMetrics    0x80000009   /* 8SVX */
 
 /* indexes for the counter array (count module) */
 
