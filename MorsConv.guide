@@ -91,6 +91,8 @@ RELEASE - Release phase of the symbol envelope in miliseconds. Optional. Allowed
 @{B}Notes@{UB}
 
 Each symbol starts at sine zero crossing. An end of a symbol may be not at zero crossing, and the wave is cut hard. It creates a nasty click. That is why default envelope release time is set to 1 ms, not 0, so the click is suppressed.
+
+To reduce quantization noise make sampling rate evenly divisible by tone pitch.
 @ENDNODE
 @NODE x
 @{B}Examples@{UB}
