@@ -1,38 +1,36 @@
-/* Structure holding all the GUI stuff. */
-
-
 extern struct Library
 	*SysBase,
 	*DOSBase,
 	*UtilityBase,
 	*MathIeeeSingBasBase,
-	*MathIeeeSingTransBase;
-
-struct Rect
-{
-	WORD x;
-	WORD y;
-	WORD w;
-	WORD h;
-};
-
-
-struct Gui
-{
-	struct Screen    *g_Screen;
-	struct Window    *g_Window;
-	struct DrawInfo  *g_DrawInfo;
-	WORD              g_TextSize;
-	WORD              g_BorderThk;
-	WORD              g_WinWidth;
-	WORD              g_WinHeight;
-	struct Rect       g_SampleView;
-};
-
+	*MathIeeeSingTransBase,
+	*IFFParseBase;
+	
 extern ULONG MorErr;
-
 
 static inline SetErr(LONG retval, LONG ecode)
 {
 	MorErr = (retval << 16) | ecode;
 }
+
+#ifdef __mc68000__
+
+#define mul16(a,b) ({ \
+LONG _r; \
+WORD _a = (a), _b = (b); \
+asm("MULS.W %2,%0": "=d" (_r): "0" (_a), "dmi" (_b): "cc"); \
+_r;})
+
+#define div16(a,b) ({ \
+WORD _r, _b = (b); \
+LONG _a = (a); \
+asm("DIVS.W %2,%0": "=d" (_r): "0" (_a), "dmi" (_b): "cc"); \
+_r;})
+
+#else
+
+#define mul16(a,b) a * b
+#define div16(a,b) a / b
+
+#endif
+
