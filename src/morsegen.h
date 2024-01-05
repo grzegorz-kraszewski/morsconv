@@ -74,6 +74,8 @@ BOOL MorseGenSetup(struct MorseGen*, Tag tag0, ...);
 #define MA_CounterStorage  0x80000007   /* COUNT */
 #define MA_CounterPrint    0x80000008   /* COUNT */
 #define MA_MorseMetrics    0x80000009   /* 8SVX */
+#define MA_EnvAttack       0x8000000A   /* 8SVX */
+#define MA_EnvRelease      0x8000000B   /* 8SVX */
 
 /* indexes for the counter array (count module) */
 

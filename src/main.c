@@ -162,13 +162,15 @@ ULONG Main(void)
 	{
 		struct RDArgs *args;
 
-		LONG numdefs[3] = {
+		LONG numdefs[5] = {
 			8000,                    /* SAMPLERATE */
 			500,                     /* PITCH */
-			20                       /* WPM */
+			20,                      /* WPM */
+			0,                       /* ATTACK */
+			1                        /* RELEASE */
 		};
 
-		LONG argvals[8] = {
+		LONG argvals[10] = {
 			0,                       /* TEXT */
 			(LONG)"CON",             /* MODE */
 			(LONG)".",               /* DOT */
@@ -176,10 +178,12 @@ ULONG Main(void)
 		 	(LONG)&numdefs[0],       /* SAMPLERATE */
 		 	(LONG)&numdefs[1],       /* PITCH */
 		 	(LONG)&numdefs[2],       /* WPM */
-		 	0                        /* TO */
+			0,                       /* TO */
+			(LONG)&numdefs[3],       /* ATTACK */
+			(LONG)&numdefs[4]        /* RELEASE */
 		};
 
-		if (args = ReadArgs("TEXT/A,MODE/K,DOT/K,DASH/K,SAMPLERATE=SR/K/N,PITCH/K/N,WPM/K/N,TO/K", argvals, NULL))
+		if (args = ReadArgs("TEXT/A,MODE/K,DOT/K,DASH/K,SAMPLERATE=SR/K/N,PITCH/K/N,WPM/K/N,TO/K,ATTACK/K/N,RELEASE/K/N", argvals, NULL))
 		{
 			struct MorseGen *mg;
 
@@ -198,6 +202,8 @@ ULONG Main(void)
 						MA_OutputFile, argvals[7],
 						MA_CounterPrint, TRUE,
 						MA_MorseMetrics, (ULONG)metrics,
+						MA_EnvAttack, *(LONG*)argvals[8],
+						MA_EnvRelease, *(LONG*)argvals[9],
 					TAG_END))
 					{
 						MorseText(mg, (STRPTR)argvals[0]);

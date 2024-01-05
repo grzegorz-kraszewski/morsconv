@@ -21,8 +21,8 @@ struct SvxMorseGen
 	LONG smg_TonePitch;
 	LONG smg_WordsPerMinute;
 	LONG smg_SamplesPerDot;
-	LONG smg_AttackSamples;
-	LONG smg_ReleaseSamples;
+	LONG smg_AttackTime;           /* miliseconds */
+	LONG smg_ReleaseTime;          /* miliseconds */
 	BYTE *smg_DotSilence;
 	BYTE *smg_DotTone;
 	BYTE *smg_DashTone;
@@ -106,6 +106,8 @@ static void ParseTags(struct SvxMorseGen *mg, struct TagItem *taglist)
 			case MA_WordsPerMinute:  mg->smg_WordsPerMinute = tag->ti_Data;       break;
 			case MA_OutputFile:      mg->smg_OutputPath = (STRPTR)tag->ti_Data;   break;
 			case MA_MorseMetrics:    mg->smg_Metrics = (LONG*)tag->ti_Data;       break;
+			case MA_EnvAttack:       mg->smg_AttackTime = tag->ti_Data;           break;
+			case MA_EnvRelease:      mg->smg_ReleaseTime = tag->ti_Data;          break;
 		}
 	}
 }
@@ -249,14 +251,13 @@ void ApplyEnvelope(BYTE *buffer, LONG count, LONG attack, LONG release)
 
 static BOOL PrepareBuffers(struct SvxMorseGen *mg)
 {
-	LONG attack_msec = 2;
-	LONG release_msec = 16;
+	LONG attack_samples, release_samples;
 
 	mg->smg_SamplesPerDot = SDivMod32(SMult32(mg->smg_SamplingRate, 6),
 		SMult32(mg->smg_WordsPerMinute, 5));
 
-	mg->smg_AttackSamples = SDivMod32(SMult32(mg->smg_SamplingRate, attack_msec), 1000);
-	mg->smg_ReleaseSamples = SDivMod32(SMult32(mg->smg_SamplingRate, release_msec), 1000);
+	attack_samples = SDivMod32(SMult32(mg->smg_SamplingRate, mg->smg_AttackTime), 1000);
+	release_samples = SDivMod32(SMult32(mg->smg_SamplingRate, mg->smg_ReleaseTime), 1000);
 
 	if (mg->smg_DotSilence = AllocVec(SMult32(mg->smg_SamplesPerDot, 5), MEMF_ANY | MEMF_CLEAR))
 	{
@@ -264,10 +265,10 @@ static BOOL PrepareBuffers(struct SvxMorseGen *mg)
 		mg->smg_DashTone = mg->smg_DotTone + mg->smg_SamplesPerDot;
 		GenerateTone(mg->smg_DotTone, mg->smg_SamplesPerDot, mg->smg_SamplingRate,
 			mg->smg_TonePitch);
-		ApplyEnvelope(mg->smg_DotTone, mg->smg_SamplesPerDot, mg->smg_AttackSamples, mg->smg_ReleaseSamples);
+		ApplyEnvelope(mg->smg_DotTone, mg->smg_SamplesPerDot, attack_samples, release_samples);
 		GenerateTone(mg->smg_DashTone, SMult32(mg->smg_SamplesPerDot, 3), mg->smg_SamplingRate,
 			mg->smg_TonePitch);
-		ApplyEnvelope(mg->smg_DashTone, SMult32(mg->smg_SamplesPerDot, 3), mg->smg_AttackSamples, mg->smg_ReleaseSamples);
+		ApplyEnvelope(mg->smg_DashTone, SMult32(mg->smg_SamplesPerDot, 3), attack_samples, release_samples);
 		return OpenOutputFile(mg);
 	}
 
@@ -287,6 +288,10 @@ static BOOL RangeChecks(struct SvxMorseGen *mg)
 	if ((mg->smg_TonePitch << 2) > mg->smg_SamplingRate) success = FALSE;
 	if (mg->smg_WordsPerMinute < 5) success = FALSE;
 	if (mg->smg_WordsPerMinute > 100) success = FALSE;
+	if (mg->smg_AttackTime < 0) success = FALSE;
+	if (mg->smg_AttackTime > 50) success = FALSE;
+	if (mg->smg_ReleaseTime < 0) success = FALSE;
+	if (mg->smg_ReleaseTime > 50) success = FALSE;
 	if (success) return PrepareBuffers(mg);
 	SetErr(RETURN_ERROR, ERROR_BAD_NUMBER);
 	return FALSE;
@@ -550,6 +555,7 @@ struct MorseGen* CreateSvxBackend(void)
 		smg->smg_SamplingRate = 8000;
 		smg->smg_TonePitch = 500;
 		smg->smg_WordsPerMinute = 20;
+		smg->smg_ReleaseTime = 1;
 	}
 
 	return &smg->mg;
