@@ -13,9 +13,9 @@ struct StdOutMorseGen
 	STRPTR somg_SymbolPauseString;
 	STRPTR somg_CharPauseString;
 	STRPTR somg_WordPauseString;
-};	
-	
-	
+};
+
+
 /****i* backend-stdout/StdOutSetup *******************************************
 *
 * NAME
@@ -41,11 +41,43 @@ struct StdOutMorseGen
 ******************************************************************************
 */
 
+/*-----------------------------------------------------------------
+ Replaces escape sequences with characters.
+ %n -> $0A
+ %t -> $09
+ %% -> %
+ Unescaped string is always shorter, so it may be done in-place.
+ Unknown escape sequences are discarded completely.
+-----------------------------------------------------------------*/
+
+static void Unescape(STRPTR s)
+{
+	STRPTR d = s;
+	UBYTE c;
+
+	while (c = *s++)
+	{
+		if (c == '%')
+		{
+			switch (*s++)
+			{
+				case 'n':   *d++ = 0x0A;   break;
+				case 't':   *d++ = 0x09;   break;
+				case '%':   *d++ = '%';    break;
+			}
+		}
+		else *d++ = c;
+	}
+
+	*d = 0x00;
+}
+
+
 static BOOL StdOutSetup(struct MorseGen *mg, struct TagItem *taglist)
 {
 	struct StdOutMorseGen *somg = (struct StdOutMorseGen*)mg;
 	struct TagItem *tag, *tagptr = taglist;
-	
+
 	while (tag = NextTagItem(&tagptr))
 	{
 		switch (tag->ti_Tag)
@@ -57,7 +89,12 @@ static BOOL StdOutSetup(struct MorseGen *mg, struct TagItem *taglist)
 			case MA_WordPause:     somg->somg_WordPauseString = (STRPTR)tag->ti_Data;    break;
 		}
 	}
-	
+
+	Unescape(somg->somg_ShortString);
+	Unescape(somg->somg_LongString);
+	Unescape(somg->somg_SymbolPauseString);
+	Unescape(somg->somg_CharPauseString);
+	Unescape(somg->somg_WordPauseString);
 	return TRUE;
 }
 
