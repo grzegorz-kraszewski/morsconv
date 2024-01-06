@@ -1,5 +1,5 @@
 @DATABASE MorsConv.guide
-@$VER: MorsConv.guide 2.0 (2.1.2024)
+@$VER: MorsConv.guide 2.0 (6.1.2024)
 @AUTHOR: RastPort
 @WORDWRAP
 @WIDTH 80
@@ -81,8 +81,6 @@ SAMPLERATE=SR - Sampling rate of audio in Hz. Optional. Allowed range: 1000 - 65
 PITCH - Tone pitch in Hz. Optional. Allowed range: 100 - 8000. Default: 500. Additional upper limit is sampling rate / 4.
 
 WPM - Speed of the code in words per minute, based on PARIS word. Optional. Allowed range: 5 - 100. Default 20.
-
-REALWPM - Real speed of the code in words per minute, used in Farnsworth timing. When in use, characters are sent at WPM, but character and word pauses are expanded to obtain REALWPM effective speed. Optional, defaults to WPM. Allowed range: 5 - 100 and must be less than WPM.
 
 ATTACK - Attack phase of the symbol envelope in miliseconds. Optional. Allowed range: 0 - 50. Default 0.
 
