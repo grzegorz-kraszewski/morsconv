@@ -2,7 +2,7 @@ Short:        Modular Morse code generator
 Uploader:     software@rastport.com (RastPort)
 Author:       software@rastport.com (RastPort)
 Type:         text/misc
-Version:      2.0
+Version:      2.1
 Architecture: m68k-amigaos >= 3.0
 
 MorsConv is a modular Morse code generator. It is a shell command (has no
@@ -22,10 +22,15 @@ For program usage see AmigaGuide file inside the archive.
  
 Version history
 
-1.0 (1.1.2024)
+1.0 (01.01.2024)
   Initial release with only "con" output module.
 
-2.0 (x.x.2024)
+2.0 (06.01.2024)
   * Added COUNT mode (counts elements of Morse code).
   * Added 8SVX mode (generates IFF 8SVX audio file with Morse code).
 
+2.1 (xx.xx.2024)
+  * CON module: Morse pauses can be replaced with user specified strings.
+    Added SPAUSE, CPAUSE and WPAUSE arguments.
+  * DOT, DASH, SPAUSE, CPAUSE and WPAUSE accept tabulators and newlines with
+    '%' escape character. 
