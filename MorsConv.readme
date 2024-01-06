@@ -26,5 +26,6 @@ Version history
   Initial release with only "con" output module.
 
 2.0 (x.x.2024)
-  Added COUNT and 8SVX modules.
-  
+  * Added COUNT mode (counts elements of Morse code).
+  * Added 8SVX mode (generates IFF 8SVX audio file with Morse code).
+

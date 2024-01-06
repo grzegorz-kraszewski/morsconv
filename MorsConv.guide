@@ -70,7 +70,7 @@ Number of Morse characters can be calculated as @{I}character pauses @{UI}+ @{I}
 @NODE mod8svx "8SVX mode"
 @{B}8SVX@{UB}
 
-Generates IFF 8SVX audio file (mono, 8-bit) with Morse code. Audio preserves standard timings with option of extending character and word pauses (Farnsworth method). Sine waveform is used. An ASR envelope is applied to each symbol.
+Generates IFF 8SVX audio file (mono, 8-bit) with Morse code. Audio preserves standard timings. Sine waveform is used. An ASR envelope is applied to each symbol.
 
 @{B}Control arguments@{UB}
 
@@ -82,8 +82,6 @@ PITCH - Tone pitch in Hz. Optional. Allowed range: 100 - 8000. Default: 500. Add
 
 WPM - Speed of the code in words per minute, based on PARIS word. Optional. Allowed range: 5 - 100. Default 20.
 
-REALWPM - Real speed of the code in words per minute, used in Farnsworth timing. When in use, characters are sent at WPM, but character and word pauses are expanded to obtain REALWPM effective speed. Optional, defaults to WPM. Allowed range: 5 - 100 and must be less than WPM.
-
 ATTACK - Attack phase of the symbol envelope in miliseconds. Optional. Allowed range: 0 - 50. Default 0.
 
 RELEASE - Release phase of the symbol envelope in miliseconds. Optional. Allowed range: 0 - 50. Default 1.
@@ -93,32 +91,4 @@ RELEASE - Release phase of the symbol envelope in miliseconds. Optional. Allowed
 Each symbol starts at sine zero crossing. An end of a symbol may be not at zero crossing, and the wave is cut hard. It creates a nasty click. That is why default envelope release time is set to 1 ms, not 0, so the click is suppressed.
 
 To reduce quantization noise make sampling rate evenly divisible by tone pitch.
-@ENDNODE
-@NODE x
-@{B}Examples@{UB}
-
-A simple case, using defaults.
-
-@{BG SHINE}MorsConv "foo bar"
-..-. --- ---   -... .- .-.@{BG BACKGROUND}
-
-Using different characters for dot and dash.
-
-@{BG SHINE}MorsConv "foo bar" DOT=o DASH="="
-oo=o === ===   =ooo o= o=o@{BG BACKGROUND}
-
-Using longer strings.
-
-@{BG SHINE}MorsConv "foo bar" DOT=di DASH=daa
-dididaadi daadaadaa daadaadaa   daadididi didaa didaadi@{BG BACKGROUND}
-
-Writing Morse code to a file in RamDisk.
-
-@{BG SHINE}MorsConv "foo bar" >RAM:morse.code
-@{I}<no output> @{UI}@{BG BACKGROUND}
-
-Counting Morse code elements.
-
-@{BG SHINE}MorsConv "foo bar" MODE=count
-9 10 13 4 1@{BG BACKGROUND}
 @ENDNODE
