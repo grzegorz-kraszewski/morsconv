@@ -63,8 +63,6 @@ BOOL MorseGenSetup(struct MorseGen*, Tag tag0, ...);
 /* control tags for Morse generators */
 /*-----------------------------------*/
 
-/* Modules: stdout */
-
 #define MA_DotText         0x80000001   /* CON */
 #define MA_DashText        0x80000002   /* CON */
 #define MA_SamplingRate    0x80000003   /* 8SVX */
@@ -76,6 +74,9 @@ BOOL MorseGenSetup(struct MorseGen*, Tag tag0, ...);
 #define MA_MorseMetrics    0x80000009   /* 8SVX */
 #define MA_EnvAttack       0x8000000A   /* 8SVX */
 #define MA_EnvRelease      0x8000000B   /* 8SVX */
+#define MA_SymbolPause     0x8000000C   /* CON */
+#define MA_CharPause       0x8000000D   /* CON */
+#define MA_WordPause       0x8000000E   /* CON */
 
 /* indexes for the counter array (count module) */
 

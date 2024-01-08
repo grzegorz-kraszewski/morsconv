@@ -1,10 +1,10 @@
 @DATABASE MorsConv.guide
-@$VER: MorsConv.guide 2.0 (2.1.2024)
+@$VER: MorsConv.guide 2.1 (8.1.2024)
 @AUTHOR: RastPort
 @WORDWRAP
 @WIDTH 80
 @NODE Main "MorsConv"
-@{B}MorsConv 2.0@{UB}
+@{B}MorsConv 2.1@{UB}
 
 MorsConv is a modular Morse code generator. It can convert a text, given as commandline argument, to various forms of Morse code. MorsConv is a shell command, it has no GUI.
 
@@ -36,17 +36,35 @@ Following optional arguments can be used to modify the output form of Morse code
 
 Prints textual representation of Morse code to the standard output. Usually it means the CLI window, MorsConv is launched in. Standard AmigaDOS output redirection may be used to write the Morse code to a file or other DOS device.
 
+Each Morse code element, including three kinds of pauses, may be replaced with an arbitrary string. String need not to be just one character. Longer strings, as well as empty ones, are supported.
+
 @{B}Control arguments@{UB}
 
 DOT - specifies a string to be used for Morse code short symbol (dot). Default dot string is ".".
 
 DASH - specifies a string to be used for Morse code long symbol (dash). Default dash string is "-".
 
+SPAUSE - specifies a string to be used for Morse code pause between symbols in a character (1 unit pause). Default is empty string.
+
+CPAUSE - specifies a string to be used for Morse code pause between characters in a word (3 units pause). Default is " " (a space).
+
+WPAUSE - specifies a string to be used for Morse code pause between words (7 units pause). Default string is "   " (3 spaces).
+
+@{B}Escape sequnces@{UB}
+
+All the above arguments accept a few escape sequences for non-printable characters. Escape character is '%' (percent sign).
+
+  * '%n' sequence is replaced with a newline character ($0A).
+  * '%t' sequence is replaced with a horizontal tab ($09).
+  * '%%' represents a single percent sign.
+  
+Any other sequences are ignored (replaced with nothing).
+
+These sequences allow for vertical and/or columnar output of Morse code.
+
 @{B}Notes@{UB}
 
-The CON mode appends a newline character at the end of converted text. In the current version of MorsConv symbol pause is ignored, character pause is one space, word pause is three spaces.
-
-Strings may be longer than one character.
+The CON mode appends a newline character at the end of output.
 @ENDNODE
 @NODE modcount "COUNT mode"
 @{B}COUNT@{UB}

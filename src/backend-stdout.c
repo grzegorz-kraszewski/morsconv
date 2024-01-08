@@ -10,9 +10,12 @@ struct StdOutMorseGen
 	struct MorseGen mg;
 	STRPTR somg_ShortString;
 	STRPTR somg_LongString;
-};	
-	
-	
+	STRPTR somg_SymbolPauseString;
+	STRPTR somg_CharPauseString;
+	STRPTR somg_WordPauseString;
+};
+
+
 /****i* backend-stdout/StdOutSetup *******************************************
 *
 * NAME
@@ -38,20 +41,60 @@ struct StdOutMorseGen
 ******************************************************************************
 */
 
+/*-----------------------------------------------------------------
+ Replaces escape sequences with characters.
+ %n -> $0A
+ %t -> $09
+ %% -> %
+ Unescaped string is always shorter, so it may be done in-place.
+ Unknown escape sequences are discarded completely.
+-----------------------------------------------------------------*/
+
+static void Unescape(STRPTR s)
+{
+	STRPTR d = s;
+	UBYTE c;
+
+	while (c = *s++)
+	{
+		if (c == '%')
+		{
+			switch (*s++)
+			{
+				case 'n':   *d++ = 0x0A;   break;
+				case 't':   *d++ = 0x09;   break;
+				case '%':   *d++ = '%';    break;
+			}
+		}
+		else *d++ = c;
+	}
+
+	*d = 0x00;
+}
+
+
 static BOOL StdOutSetup(struct MorseGen *mg, struct TagItem *taglist)
 {
 	struct StdOutMorseGen *somg = (struct StdOutMorseGen*)mg;
 	struct TagItem *tag, *tagptr = taglist;
-	
+
 	while (tag = NextTagItem(&tagptr))
 	{
 		switch (tag->ti_Tag)
 		{
-			case MA_DotText:   somg->somg_ShortString = (STRPTR)tag->ti_Data;  break;
-			case MA_DashText:  somg->somg_LongString = (STRPTR)tag->ti_Data;   break;
+			case MA_DotText:       somg->somg_ShortString = (STRPTR)tag->ti_Data;        break;
+			case MA_DashText:      somg->somg_LongString = (STRPTR)tag->ti_Data;         break;
+			case MA_SymbolPause:   somg->somg_SymbolPauseString = (STRPTR)tag->ti_Data;  break;
+			case MA_CharPause:     somg->somg_CharPauseString = (STRPTR)tag->ti_Data;    break;
+			case MA_WordPause:     somg->somg_WordPauseString = (STRPTR)tag->ti_Data;    break;
 		}
 	}
-	
+
+	Unescape(somg->somg_ShortString);
+	Unescape(somg->somg_LongString);
+	Unescape(somg->somg_SymbolPauseString);
+	Unescape(somg->somg_CharPauseString);
+	Unescape(somg->somg_WordPauseString);
 	return TRUE;
 }
 
@@ -112,6 +155,8 @@ static void StdOutCleanup(struct MorseGen *mg)
 static void StdOutIntraSymbolPause(struct MorseGen *mg)
 {
 	struct StdOutMorseGen *somg = (struct StdOutMorseGen*)mg;
+
+	PutStr(somg->somg_SymbolPauseString);
 	return;
 }
 
@@ -142,7 +187,9 @@ static void StdOutIntraSymbolPause(struct MorseGen *mg)
 static void StdOutInterSymbolPause(struct MorseGen *mg)
 {
 	struct StdOutMorseGen *somg = (struct StdOutMorseGen*)mg;
-	WriteChars(" ", 1);
+
+	PutStr(somg->somg_CharPauseString);	
+	return;
 }
 
 
@@ -172,7 +219,9 @@ static void StdOutInterSymbolPause(struct MorseGen *mg)
 static void StdOutInterWordPause(struct MorseGen *mg)
 {
 	struct StdOutMorseGen *somg = (struct StdOutMorseGen*)mg;
-	WriteChars("   ", 3);
+
+	PutStr(somg->somg_WordPauseString);
+	return;
 }
 
 
@@ -279,6 +328,9 @@ struct MorseGen* CreateStdOutBackend(void)
 		somg->mg.mg_NeedsMetrics = FALSE;
 		somg->somg_ShortString = ".";
 		somg->somg_LongString = "-";
+		somg->somg_SymbolPauseString = "";
+		somg->somg_CharPauseString = " ";
+		somg->somg_WordPauseString = "   ";
 	}
 	
 	return &somg->mg;
