@@ -251,6 +251,17 @@ void ApplyEnvelope(BYTE *buffer, LONG count, LONG attack, LONG release)
 	}
 }
 
+/* Function is prepared to be moved out of this file, as will be used with more backends. */
+
+/* Note that MorsConv knows Morse code metrics in advance, so it could fit RealWPM perfectly. */
+/* However it calculates Farnsworth timing based on PARIS word, the same as ARRL paper.       */
+/* It calculates two values, so they are returned via pointers.*/
+
+static void CalculateFarnsworthPauses(LONG samplesperdot, LONG charwpm, LONG realwpm, LONG *charpause, LONG *wordpause)
+{
+	Printf("Farnsworth: %ld/%ld WPM, %ld samples per dot.\n", realwpm, charwpm, samplesperdot);
+}
+
 
 static BOOL PrepareBuffers(struct SvxMorseGen *mg)
 {
@@ -258,6 +269,9 @@ static BOOL PrepareBuffers(struct SvxMorseGen *mg)
 
 	mg->smg_SamplesPerDot = SDivMod32(SMult32(mg->smg_SamplingRate, 6),
 		SMult32(mg->smg_WordsPerMinute, 5));
+
+	CalculateFarnsworthPauses(mg->smg_SamplesPerDot, mg->smg_WordsPerMinute, mg->smg_RealWordsPerMinute,
+		&mg->smg_SamplesPerCharPause, &mg->smg_SamplesPerWordPause);
 
 	attack_samples = SDivMod32(SMult32(mg->smg_SamplingRate, mg->smg_AttackTime), 1000);
 	release_samples = SDivMod32(SMult32(mg->smg_SamplingRate, mg->smg_ReleaseTime), 1000);
@@ -297,7 +311,7 @@ static BOOL RangeChecks(struct SvxMorseGen *mg)
 	if (mg->smg_WordsPerMinute > 100) success = FALSE;
 	if (mg->smg_RealWordsPerMinute < 5) success = FALSE;
 	if (mg->smg_RealWordsPerMinute > 100) success = FALSE;
-	if (mg->smg_RealWordsPerMinute > mg->smg_WordsPerMinute) return FALSE;
+	if (mg->smg_RealWordsPerMinute > mg->smg_WordsPerMinute) success = FALSE;
 	if (mg->smg_AttackTime < 0) success = FALSE;
 	if (mg->smg_AttackTime > 50) success = FALSE;
 	if (mg->smg_ReleaseTime < 0) success = FALSE;
