@@ -162,15 +162,16 @@ ULONG Main(void)
 	{
 		struct RDArgs *args;
 
-		LONG numdefs[5] = {
+		LONG numdefs[6] = {
 			8000,                    /* SAMPLERATE */
 			500,                     /* PITCH */
 			20,                      /* WPM */
 			0,                       /* ATTACK */
-			1                        /* RELEASE */
+			1,                       /* RELEASE */
+			20,                      /* REALWPM */
 		};
 
-		LONG argvals[13] = {
+		LONG argvals[14] = {
 			0,                       /* TEXT */
 			(LONG)"CON",             /* MODE */
 			(LONG)".",               /* DOT */
@@ -183,10 +184,11 @@ ULONG Main(void)
 			(LONG)&numdefs[4],       /* RELEASE */
 			(LONG)"",                /* SPAUSE */
 			(LONG)" ",               /* CPAUSE */
-			(LONG)"   "              /* WPAUSE */
+			(LONG)"   ",             /* WPAUSE */
+			(LONG)&numdefs[5]        /* REALWPM */
 		};
 
-		if (args = ReadArgs("TEXT/A,MODE/K,DOT/K,DASH/K,SAMPLERATE=SR/K/N,PITCH/K/N,WPM/K/N,TO/K,ATTACK/K/N,RELEASE/K/N,SPAUSE/K,CPAUSE/K,WPAUSE/K", argvals, NULL))
+		if (args = ReadArgs("TEXT/A,MODE/K,DOT/K,DASH/K,SAMPLERATE=SR/K/N,PITCH/K/N,WPM/K/N,TO/K,ATTACK/K/N,RELEASE/K/N,SPAUSE/K,CPAUSE/K,WPAUSE/K,REALWPM/K/N", argvals, NULL))
 		{
 			struct MorseGen *mg;
 
@@ -202,6 +204,7 @@ ULONG Main(void)
 						MA_SamplingRate, *(LONG*)argvals[4],
 						MA_TonePitch, *(LONG*)argvals[5],
 						MA_WordsPerMinute, *(LONG*)argvals[6],
+						MA_RealWordsPerMinute, *(LONG*)argvals[13],
 						MA_OutputFile, argvals[7],
 						MA_CounterPrint, TRUE,
 						MA_MorseMetrics, (ULONG)metrics,
