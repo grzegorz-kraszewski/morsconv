@@ -12,7 +12,6 @@
 #include "backend-count.h"
 
 
-
 struct SvxMorseGen
 {
 	struct MorseGen mg;
@@ -20,9 +19,12 @@ struct SvxMorseGen
 	LONG smg_SamplingRate;
 	LONG smg_TonePitch;
 	LONG smg_WordsPerMinute;
+	LONG smg_RealWordsPerMinute;     /* Farnsworth timing */
 	LONG smg_SamplesPerDot;
-	LONG smg_AttackTime;           /* miliseconds */
-	LONG smg_ReleaseTime;          /* miliseconds */
+	LONG smg_SamplesPerCharPause;    /* Farnsworth timing */
+	LONG smg_SamplesPerWordPause;    /* Farnsworth timing */
+	LONG smg_AttackTime;             /* miliseconds */
+	LONG smg_ReleaseTime;            /* miliseconds */
 	BYTE *smg_DotSilence;
 	BYTE *smg_DotTone;
 	BYTE *smg_DashTone;
@@ -101,13 +103,14 @@ static void ParseTags(struct SvxMorseGen *mg, struct TagItem *taglist)
 	{
 		switch (tag->ti_Tag)
 		{
-			case MA_SamplingRate:    mg->smg_SamplingRate = tag->ti_Data;         break;
-			case MA_TonePitch:       mg->smg_TonePitch = tag->ti_Data;            break;
-			case MA_WordsPerMinute:  mg->smg_WordsPerMinute = tag->ti_Data;       break;
-			case MA_OutputFile:      mg->smg_OutputPath = (STRPTR)tag->ti_Data;   break;
-			case MA_MorseMetrics:    mg->smg_Metrics = (LONG*)tag->ti_Data;       break;
-			case MA_EnvAttack:       mg->smg_AttackTime = tag->ti_Data;           break;
-			case MA_EnvRelease:      mg->smg_ReleaseTime = tag->ti_Data;          break;
+			case MA_SamplingRate:          mg->smg_SamplingRate = tag->ti_Data;         break;
+			case MA_TonePitch:             mg->smg_TonePitch = tag->ti_Data;            break;
+			case MA_WordsPerMinute:        mg->smg_WordsPerMinute = tag->ti_Data;       break;
+			case MA_OutputFile:            mg->smg_OutputPath = (STRPTR)tag->ti_Data;   break;
+			case MA_MorseMetrics:          mg->smg_Metrics = (LONG*)tag->ti_Data;       break;
+			case MA_EnvAttack:             mg->smg_AttackTime = tag->ti_Data;           break;
+			case MA_EnvRelease:            mg->smg_ReleaseTime = tag->ti_Data;          break;
+			case MA_RealWordsPerMinute:    mg->smg_RealWordsPerMinute = tag->ti_Data;   break;
 		}
 	}
 }
@@ -281,6 +284,10 @@ static BOOL RangeChecks(struct SvxMorseGen *mg)
 {
 	BOOL success = TRUE;
 
+	/* if RealWPM has been not specified in taglist, it defaults to WPM */
+
+	if (mg->smg_RealWordsPerMinute == 0) mg->smg_RealWordsPerMinute = mg->smg_WordsPerMinute;
+
 	if (mg->smg_SamplingRate < 1000) success = FALSE;
 	if (mg->smg_SamplingRate > 65535) success = FALSE;
 	if (mg->smg_TonePitch < 100) success = FALSE;
@@ -288,11 +295,15 @@ static BOOL RangeChecks(struct SvxMorseGen *mg)
 	if ((mg->smg_TonePitch << 2) > mg->smg_SamplingRate) success = FALSE;
 	if (mg->smg_WordsPerMinute < 5) success = FALSE;
 	if (mg->smg_WordsPerMinute > 100) success = FALSE;
+	if (mg->smg_RealWordsPerMinute < 5) success = FALSE;
+	if (mg->smg_RealWordsPerMinute > 100) success = FALSE;
+	if (mg->smg_RealWordsPerMinute > mg->smg_WordsPerMinute) return FALSE;
 	if (mg->smg_AttackTime < 0) success = FALSE;
 	if (mg->smg_AttackTime > 50) success = FALSE;
 	if (mg->smg_ReleaseTime < 0) success = FALSE;
 	if (mg->smg_ReleaseTime > 50) success = FALSE;
 	if (success) return PrepareBuffers(mg);
+
 	SetErr(RETURN_ERROR, ERROR_BAD_NUMBER);
 	return FALSE;
 }

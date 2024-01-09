@@ -100,7 +100,7 @@ PITCH - Tone pitch in Hz. Optional. Allowed range: 100 - 8000. Default: 500. Add
 
 WPM - Speed of the code in words per minute, based on PARIS word. Optional. Allowed range: 5 - 100. Default 20.
 
-REALWPM – Enable Farnsworth timing. Characters are sent at speed specified by WPM. Pauses between characters and words are extended proportionally to obtain average REALWPM code speed. Optional argument, default value is equal to WPM (standard timing). Allowed range: 5 to 100, but must be less than WPM.
+REALWPM – Enable Farnsworth timing. Characters are sent at speed specified by WPM. Pauses between characters and words are extended proportionally to obtain average REALWPM code speed. Optional argument, default value is equal to WPM (standard timing). Allowed range: 5 to 100, but must be less than or equal to WPM.
 
 ATTACK - Attack phase of the symbol envelope in miliseconds. Optional. Allowed range: 0 - 50. Default 0.
 
