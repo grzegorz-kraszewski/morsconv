@@ -1,10 +1,10 @@
 @DATABASE MorsConv.guide
-@$VER: MorsConv.guide 2.1 (8.1.2024)
+@$VER: MorsConv.guide 2.2 (x.1.2024)
 @AUTHOR: RastPort
 @WORDWRAP
 @WIDTH 80
 @NODE Main "MorsConv"
-@{B}MorsConv 2.1@{UB}
+@{B}MorsConv 2.2@{UB}
 
 MorsConv is a modular Morse code generator. It can convert a text, given as commandline argument, to various forms of Morse code. MorsConv is a shell command, it has no GUI.
 
@@ -82,13 +82,13 @@ Counts Morse code elements. It prints five integer numbers separated by spaces a
 None.
 
 @{B}Notes@{UB}
-  
+
 Number of Morse characters can be calculated as @{I}character pauses @{UI}+ @{I}word pauses @{UI}+ 1. Note that skipped characters (having no representation in Morse code) are not counted. ASCII spaces are not counted as well, they are just word pauses.
 @ENDNODE
 @NODE mod8svx "8SVX mode"
 @{B}8SVX@{UB}
 
-Generates IFF 8SVX audio file (mono, 8-bit) with Morse code. Audio preserves standard timings. Sine waveform is used. An ASR envelope is applied to each symbol.
+Generates IFF 8SVX audio file (mono, 8-bit) with Morse code. Audio preserves standard timings with optional extension of pauses according to Farnsworth timing. Sine waveform is used. An ASR envelope is applied to each symbol.
 
 @{B}Control arguments@{UB}
 
@@ -99,6 +99,8 @@ SAMPLERATE=SR - Sampling rate of audio in Hz. Optional. Allowed range: 1000 - 65
 PITCH - Tone pitch in Hz. Optional. Allowed range: 100 - 8000. Default: 500. Additional upper limit is sampling rate / 4.
 
 WPM - Speed of the code in words per minute, based on PARIS word. Optional. Allowed range: 5 - 100. Default 20.
+
+REALWPM – Enable Farnsworth timing. Characters are sent at speed specified by WPM. Pauses between characters and words are extended proportionally to obtain average REALWPM code speed. Optional argument, default value is equal to WPM (standard timing). Allowed range: 5 to 100, but must be less than WPM.
 
 ATTACK - Attack phase of the symbol envelope in miliseconds. Optional. Allowed range: 0 - 50. Default 0.
 

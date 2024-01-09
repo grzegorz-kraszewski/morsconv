@@ -2,7 +2,7 @@ Short:        Modular Morse code generator
 Uploader:     software@rastport.com (RastPort)
 Author:       software@rastport.com (RastPort)
 Type:         text/misc
-Version:      2.1
+Version:      2.2
 Architecture: m68k-amigaos >= 3.0
 
 MorsConv is a modular Morse code generator. It is a shell command (has no
@@ -21,6 +21,9 @@ grzegorz-kraszewski/morsconv.
 For program usage see AmigaGuide file inside the archive.
  
 Version history
+
+2.2 (xx.01.2024)
+  * Implemented Farnsworth timing for 8SVX mode, added REALWPM argument.
 
 2.1 (08.01.2024)
   * CON module: Morse pauses can be replaced with user specified strings.
