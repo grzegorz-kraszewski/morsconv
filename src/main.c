@@ -168,7 +168,7 @@ ULONG Main(void)
 			20,                      /* WPM */
 			0,                       /* ATTACK */
 			1,                       /* RELEASE */
-			20,                      /* REALWPM */
+			0,                       /* REALWPM */
 		};
 
 		LONG argvals[14] = {
