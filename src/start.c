@@ -47,4 +47,4 @@ ULONG Start(void)
 }
 
 
-__attribute__((section(".text"))) UBYTE VString[] = "$VER: MorsConv 2.1 (08.01.2024)\r\n";
+__attribute__((section(".text"))) UBYTE VString[] = "$VER: MorsConv 2.2 (10.01.2024)\r\n";

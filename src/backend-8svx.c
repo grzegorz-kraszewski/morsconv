@@ -12,7 +12,6 @@
 #include "backend-count.h"
 
 
-
 struct SvxMorseGen
 {
 	struct MorseGen mg;
@@ -20,12 +19,15 @@ struct SvxMorseGen
 	LONG smg_SamplingRate;
 	LONG smg_TonePitch;
 	LONG smg_WordsPerMinute;
+	LONG smg_RealWordsPerMinute;     /* Farnsworth timing */
 	LONG smg_SamplesPerDot;
-	LONG smg_AttackTime;           /* miliseconds */
-	LONG smg_ReleaseTime;          /* miliseconds */
-	BYTE *smg_DotSilence;
+	LONG smg_SamplesPerCharPause;    /* Farnsworth timing */
+	LONG smg_SamplesPerWordPause;    /* Farnsworth timing */
+	LONG smg_AttackTime;             /* miliseconds */
+	LONG smg_ReleaseTime;            /* miliseconds */
 	BYTE *smg_DotTone;
 	BYTE *smg_DashTone;
+	BYTE *smg_Silence;               /* long enough for word pause, including Farnsworth */
 	STRPTR smg_OutputPath;
 	BPTR smg_OutputFile;
 	struct IFFHandle* smg_OutputIFF;
@@ -101,13 +103,14 @@ static void ParseTags(struct SvxMorseGen *mg, struct TagItem *taglist)
 	{
 		switch (tag->ti_Tag)
 		{
-			case MA_SamplingRate:    mg->smg_SamplingRate = tag->ti_Data;         break;
-			case MA_TonePitch:       mg->smg_TonePitch = tag->ti_Data;            break;
-			case MA_WordsPerMinute:  mg->smg_WordsPerMinute = tag->ti_Data;       break;
-			case MA_OutputFile:      mg->smg_OutputPath = (STRPTR)tag->ti_Data;   break;
-			case MA_MorseMetrics:    mg->smg_Metrics = (LONG*)tag->ti_Data;       break;
-			case MA_EnvAttack:       mg->smg_AttackTime = tag->ti_Data;           break;
-			case MA_EnvRelease:      mg->smg_ReleaseTime = tag->ti_Data;          break;
+			case MA_SamplingRate:          mg->smg_SamplingRate = tag->ti_Data;         break;
+			case MA_TonePitch:             mg->smg_TonePitch = tag->ti_Data;            break;
+			case MA_WordsPerMinute:        mg->smg_WordsPerMinute = tag->ti_Data;       break;
+			case MA_OutputFile:            mg->smg_OutputPath = (STRPTR)tag->ti_Data;   break;
+			case MA_MorseMetrics:          mg->smg_Metrics = (LONG*)tag->ti_Data;       break;
+			case MA_EnvAttack:             mg->smg_AttackTime = tag->ti_Data;           break;
+			case MA_EnvRelease:            mg->smg_ReleaseTime = tag->ti_Data;          break;
+			case MA_RealWordsPerMinute:    mg->smg_RealWordsPerMinute = tag->ti_Data;   break;
 		}
 	}
 }
@@ -154,20 +157,19 @@ static BOOL WriteHeader(struct SvxMorseGen *mg, LONG samples)
 }
 
 
-
 static BOOL CalculateAudioSize(struct SvxMorseGen *mg)
 {
-	LONG samples = 0;
+	LONG samples = 0, samples_per_dash;
 
+	samples_per_dash = (mg->smg_SamplesPerDot << 1) + mg->smg_SamplesPerDot;
 	samples += SMult32(mg->smg_Metrics[COUNTER_DOTS], mg->smg_SamplesPerDot);
-	samples += SMult32(mg->smg_Metrics[COUNTER_DASHES], SMult32(mg->smg_SamplesPerDot, 3));
+	samples += SMult32(mg->smg_Metrics[COUNTER_DASHES], samples_per_dash);
 	samples += SMult32(mg->smg_Metrics[COUNTER_SYMBOL_PAUSES], mg->smg_SamplesPerDot);
-	samples += SMult32(mg->smg_Metrics[COUNTER_CHAR_PAUSES], SMult32(mg->smg_SamplesPerDot, 3));
-	samples += SMult32(mg->smg_Metrics[COUNTER_WORD_PAUSES], SMult32(mg->smg_SamplesPerDot, 7));
+	samples += SMult32(mg->smg_Metrics[COUNTER_CHAR_PAUSES], mg->smg_SamplesPerCharPause);
+	samples += SMult32(mg->smg_Metrics[COUNTER_WORD_PAUSES], mg->smg_SamplesPerWordPause);
 	Printf("%ld audio samples total.\n", samples);
 	return WriteHeader(mg, samples);
 }
-
 
 
 static BOOL OpenOutputIFF(struct SvxMorseGen *mg)
@@ -248,27 +250,49 @@ void ApplyEnvelope(BYTE *buffer, LONG count, LONG attack, LONG release)
 	}
 }
 
+/*--------------------------------------------------------------------------------------------*/
+/* Function is prepared to be moved out of this file, as will be used with more backends.     */
+/*--------------------------------------------------------------------------------------------*/
+/* Note that MorsConv knows Morse code metrics in advance, so it could fit RealWPM perfectly. */
+/* However it calculates Farnsworth timing based on PARIS word, the same as ARRL paper.       */
+/* It calculates two values, so they are returned via pointers.                               */
+/*--------------------------------------------------------------------------------------------*/
+
+void CalculateFarnsworthPauses(LONG samplesperdot, WORD charwpm, WORD realwpm, LONG samplerate,
+LONG *charpause, LONG *wordpause)
+{
+	LONG alpha, beta, cpauseplus, wpauseplus;
+	
+	alpha = SMult32(SMult32(60, samplerate), charwpm - realwpm);	
+	beta = mul16(charwpm, realwpm);   /* max 10000 */
+	beta = mul16(beta, 19);
+	cpauseplus = SDivMod32(SMult32(3, alpha), beta);
+	wpauseplus = SDivMod32(SMult32(7, alpha), beta);
+	*charpause = SMult32(samplesperdot, 3) + cpauseplus;
+	*wordpause = SMult32(samplesperdot, 7) + wpauseplus;
+}
+
 
 static BOOL PrepareBuffers(struct SvxMorseGen *mg)
 {
-	LONG attack_samples, release_samples;
+	LONG attack_samples, release_samples, samples_per_dash;
 
-	mg->smg_SamplesPerDot = SDivMod32(SMult32(mg->smg_SamplingRate, 6),
-		SMult32(mg->smg_WordsPerMinute, 5));
-
+	mg->smg_SamplesPerDot = SDivMod32(SMult32(mg->smg_SamplingRate, 6), SMult32(mg->smg_WordsPerMinute, 5));
+	samples_per_dash = (mg->smg_SamplesPerDot << 1) + mg->smg_SamplesPerDot;
+	CalculateFarnsworthPauses(mg->smg_SamplesPerDot, mg->smg_WordsPerMinute, mg->smg_RealWordsPerMinute,
+	mg->smg_SamplingRate, &mg->smg_SamplesPerCharPause, &mg->smg_SamplesPerWordPause);
 	attack_samples = SDivMod32(SMult32(mg->smg_SamplingRate, mg->smg_AttackTime), 1000);
 	release_samples = SDivMod32(SMult32(mg->smg_SamplingRate, mg->smg_ReleaseTime), 1000);
 
-	if (mg->smg_DotSilence = AllocVec(SMult32(mg->smg_SamplesPerDot, 5), MEMF_ANY | MEMF_CLEAR))
+	if (mg->smg_DotTone = AllocVec(mg->smg_SamplesPerDot + samples_per_dash + mg->smg_SamplesPerWordPause,
+	MEMF_ANY | MEMF_CLEAR))
 	{
-		mg->smg_DotTone = mg->smg_DotSilence + mg->smg_SamplesPerDot;
 		mg->smg_DashTone = mg->smg_DotTone + mg->smg_SamplesPerDot;
-		GenerateTone(mg->smg_DotTone, mg->smg_SamplesPerDot, mg->smg_SamplingRate,
-			mg->smg_TonePitch);
+		mg->smg_Silence = mg->smg_DashTone + samples_per_dash;
+		GenerateTone(mg->smg_DotTone, mg->smg_SamplesPerDot, mg->smg_SamplingRate, mg->smg_TonePitch);
 		ApplyEnvelope(mg->smg_DotTone, mg->smg_SamplesPerDot, attack_samples, release_samples);
-		GenerateTone(mg->smg_DashTone, SMult32(mg->smg_SamplesPerDot, 3), mg->smg_SamplingRate,
-			mg->smg_TonePitch);
-		ApplyEnvelope(mg->smg_DashTone, SMult32(mg->smg_SamplesPerDot, 3), attack_samples, release_samples);
+		GenerateTone(mg->smg_DashTone, samples_per_dash, mg->smg_SamplingRate, mg->smg_TonePitch);
+		ApplyEnvelope(mg->smg_DashTone, samples_per_dash, attack_samples, release_samples);
 		return OpenOutputFile(mg);
 	}
 
@@ -281,6 +305,10 @@ static BOOL RangeChecks(struct SvxMorseGen *mg)
 {
 	BOOL success = TRUE;
 
+	/* if RealWPM has been not specified in taglist, it defaults to WPM */
+
+	if (mg->smg_RealWordsPerMinute == 0) mg->smg_RealWordsPerMinute = mg->smg_WordsPerMinute;
+
 	if (mg->smg_SamplingRate < 1000) success = FALSE;
 	if (mg->smg_SamplingRate > 65535) success = FALSE;
 	if (mg->smg_TonePitch < 100) success = FALSE;
@@ -288,11 +316,15 @@ static BOOL RangeChecks(struct SvxMorseGen *mg)
 	if ((mg->smg_TonePitch << 2) > mg->smg_SamplingRate) success = FALSE;
 	if (mg->smg_WordsPerMinute < 5) success = FALSE;
 	if (mg->smg_WordsPerMinute > 100) success = FALSE;
+	if (mg->smg_RealWordsPerMinute < 5) success = FALSE;
+	if (mg->smg_RealWordsPerMinute > 100) success = FALSE;
+	if (mg->smg_RealWordsPerMinute > mg->smg_WordsPerMinute) success = FALSE;
 	if (mg->smg_AttackTime < 0) success = FALSE;
 	if (mg->smg_AttackTime > 50) success = FALSE;
 	if (mg->smg_ReleaseTime < 0) success = FALSE;
 	if (mg->smg_ReleaseTime > 50) success = FALSE;
 	if (success) return PrepareBuffers(mg);
+
 	SetErr(RETURN_ERROR, ERROR_BAD_NUMBER);
 	return FALSE;
 }
@@ -347,7 +379,7 @@ static void SvxCleanup(struct MorseGen *mg)
 	if (smg->smg_IFFOpened) CloseIFF(smg->smg_OutputIFF);
 	if (smg->smg_OutputIFF) FreeIFF(smg->smg_OutputIFF);
 	if (smg->smg_OutputFile) Close(smg->smg_OutputFile);
-	if (smg->smg_DotSilence) FreeVec(smg->smg_DotSilence);
+	if (smg->smg_DotTone) FreeVec(smg->smg_DotTone);
 	FreeMem(mg, sizeof(struct SvxMorseGen));
 }
 
@@ -379,7 +411,7 @@ static void SvxIntraSymbolPause(struct MorseGen *mg)
 {
 	struct SvxMorseGen *smg = (struct SvxMorseGen*)mg;
 
-	WriteChunkBytes(smg->smg_OutputIFF, smg->smg_DotSilence, smg->smg_SamplesPerDot);
+	WriteChunkBytes(smg->smg_OutputIFF, smg->smg_Silence, smg->smg_SamplesPerDot);
 }
 
 
@@ -394,7 +426,7 @@ static void SvxIntraSymbolPause(struct MorseGen *mg)
 *   void SvxInterSymbolPause(struct MorseGen*);
 *
 * FUNCTION
-*   Writes silence of 3 * dot length to 8SVX file.
+*   Writes silence of inter-symbol lenght to 8SVX file.
 *
 * INPUTS
 *   morsegen - control structure.
@@ -408,12 +440,8 @@ static void SvxIntraSymbolPause(struct MorseGen *mg)
 static void SvxInterSymbolPause(struct MorseGen *mg)
 {
 	struct SvxMorseGen *smg = (struct SvxMorseGen*)mg;
-	WORD i;
 
-	for (i = 0; i < 3; i++)
-	{
-		WriteChunkBytes(smg->smg_OutputIFF, smg->smg_DotSilence, smg->smg_SamplesPerDot);
-	}
+	WriteChunkBytes(smg->smg_OutputIFF, smg->smg_Silence, smg->smg_SamplesPerCharPause);
 }
 
 
@@ -427,7 +455,7 @@ static void SvxInterSymbolPause(struct MorseGen *mg)
 *   void SvxInterWordPause(struct MorseGen*);
 *
 * FUNCTION
-*   Writes silence of 7 * dot length to 8SVX file.
+*   Writes silence of inter-word pause length to 8SVX file.
 *
 * INPUTS
 *   morsegen - control structure.
@@ -441,12 +469,8 @@ static void SvxInterSymbolPause(struct MorseGen *mg)
 static void SvxInterWordPause(struct MorseGen *mg)
 {
 	struct SvxMorseGen *smg = (struct SvxMorseGen*)mg;
-	WORD i;
 
-	for (i = 0; i < 7; i++)
-	{
-		WriteChunkBytes(smg->smg_OutputIFF, smg->smg_DotSilence, smg->smg_SamplesPerDot);
-	}
+	WriteChunkBytes(smg->smg_OutputIFF, smg->smg_Silence, smg->smg_SamplesPerWordPause);
 }
 
 
@@ -503,8 +527,10 @@ static void SvxShortTone(struct MorseGen *mg)
 static void SvxLongTone(struct MorseGen *mg)
 {
 	struct SvxMorseGen *smg = (struct SvxMorseGen*)mg;
-
-	WriteChunkBytes(smg->smg_OutputIFF, smg->smg_DashTone, SMult32(smg->smg_SamplesPerDot, 3));
+	LONG samples_per_dash;
+	
+	samples_per_dash = (smg->smg_SamplesPerDot << 1) + smg->smg_SamplesPerDot;
+	WriteChunkBytes(smg->smg_OutputIFF, smg->smg_DashTone, samples_per_dash);
 }
 
 

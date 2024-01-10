@@ -7,7 +7,7 @@
 /****i* morsegen/MorseGen ****************************************************
 *
 * NAME
-*   MorseGen -- Structure controlling Morse generator 
+*   MorseGen -- Structure controlling Morse generator
 *
 * SYNOPSIS
 *   struct MorseGen
@@ -63,20 +63,21 @@ BOOL MorseGenSetup(struct MorseGen*, Tag tag0, ...);
 /* control tags for Morse generators */
 /*-----------------------------------*/
 
-#define MA_DotText         0x80000001   /* CON */
-#define MA_DashText        0x80000002   /* CON */
-#define MA_SamplingRate    0x80000003   /* 8SVX */
-#define MA_TonePitch       0x80000004   /* 8SVX */
-#define MA_WordsPerMinute  0x80000005   /* 8SVX */
-#define MA_OutputFile      0x80000006   /* 8SVX */
-#define MA_CounterStorage  0x80000007   /* COUNT */
-#define MA_CounterPrint    0x80000008   /* COUNT */
-#define MA_MorseMetrics    0x80000009   /* 8SVX */
-#define MA_EnvAttack       0x8000000A   /* 8SVX */
-#define MA_EnvRelease      0x8000000B   /* 8SVX */
-#define MA_SymbolPause     0x8000000C   /* CON */
-#define MA_CharPause       0x8000000D   /* CON */
-#define MA_WordPause       0x8000000E   /* CON */
+#define MA_DotText               0x80000001   /* CON */
+#define MA_DashText              0x80000002   /* CON */
+#define MA_SamplingRate          0x80000003   /* 8SVX */
+#define MA_TonePitch             0x80000004   /* 8SVX */
+#define MA_WordsPerMinute        0x80000005   /* 8SVX */
+#define MA_OutputFile            0x80000006   /* 8SVX */
+#define MA_CounterStorage        0x80000007   /* COUNT */
+#define MA_CounterPrint          0x80000008   /* COUNT */
+#define MA_MorseMetrics          0x80000009   /* 8SVX */
+#define MA_EnvAttack             0x8000000A   /* 8SVX */
+#define MA_EnvRelease            0x8000000B   /* 8SVX */
+#define MA_SymbolPause           0x8000000C   /* CON */
+#define MA_CharPause             0x8000000D   /* CON */
+#define MA_WordPause             0x8000000E   /* CON */
+#define MA_RealWordsPerMinute    0x8000000F   /* 8SVX */
 
 /* indexes for the counter array (count module) */
 
