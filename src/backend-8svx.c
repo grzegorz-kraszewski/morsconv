@@ -265,7 +265,7 @@ LONG *charpause, LONG *wordpause)
 	
 	alpha = SMult32(SMult32(60, samplerate), charwpm - realwpm);	
 	beta = mul16(charwpm, realwpm);   /* max 10000 */
-	beta = SMult32(beta, 19);
+	beta = mul16(beta, 19);
 	cpauseplus = SDivMod32(SMult32(3, alpha), beta);
 	wpauseplus = SDivMod32(SMult32(7, alpha), beta);
 	*charpause = SMult32(samplesperdot, 3) + cpauseplus;
