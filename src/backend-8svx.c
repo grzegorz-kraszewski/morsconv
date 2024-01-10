@@ -9,7 +9,6 @@
 
 #include "main.h"
 #include "morsegen.h"
-#include "backend-count.h"
 
 
 struct SvxMorseGen
