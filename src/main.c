@@ -6,6 +6,7 @@
 #include "backend-stdout.h"
 #include "backend-8svx.h"
 #include "backend-count.h"
+#include "backend-audio.h"
 
 ULONG MorErr; /* global error var, return code in upper 16 bits, error code in lower 16 bits */
 
@@ -82,6 +83,7 @@ const struct MorsMode Modes[] =
 	{ "CON",     CreateStdOutBackend },
 	{ "8SVX",    CreateSvxBackend },
 	{ "COUNT",   CreateCountBackend },
+	{ "AUDIO",   CreateAudioBackend },
 	{ NULL,      NULL }
 };
 

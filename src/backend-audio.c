@@ -2,12 +2,17 @@
 #include <proto/dos.h>
 #include <proto/utility.h>
 
+#include <devices/audio.h>
+
 #include "main.h"
 #include "morsegen.h"
 
 struct AudioMorseGen
 {
 	struct MorseGen mg;
+	struct MsgPort *amg_Port;
+	struct IOAudio *amg_Req0;
+	struct IOAudio *amg_Req1;
 };	
 	
 	
@@ -45,13 +50,49 @@ static void ParseTags(struct AudioMorseGen *mg, struct TagItem *taglist)
 	}
 }
 
+/*---------------------------------------------------------------------------*/
+
+static BOOL OpenAudioDevice(struct AudioMorseGen *amg)
+{
+	Printf("audio: req0 at $%08lx, req1 at $%08lx.\n", (LONG)amg->amg_Req0, (LONG)amg->amg_Req1);
+	SetErr(RETURN_ERROR, ERROR_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+/*---------------------------------------------------------------------------*/
+
+static BOOL GetAudioRequests(struct AudioMorseGen *amg)
+{
+	Printf("audio: msgport at $%08lx.\n", (LONG)amg->amg_Port);
+	
+	if (amg->amg_Req0 = (struct IOAudio*)CreateIORequest(amg->amg_Port, sizeof(struct IOAudio)))
+	{
+		if (amg->amg_Req1 = (struct IOAudio*)CreateIORequest(amg->amg_Port, sizeof(struct IOAudio)))
+		{
+			return OpenAudioDevice(amg);
+		}
+	}
+	
+	SetErr(RETURN_ERROR, ERROR_NO_FREE_STORE);
+	return FALSE;
+}
+
+/*---------------------------------------------------------------------------*/
+
+static BOOL GetAudioPort(struct AudioMorseGen *amg)
+{
+	if (amg->amg_Port = CreateMsgPort()) return GetAudioRequests(amg);
+	SetErr(RETURN_ERROR, ERROR_NO_FREE_STORE);
+	return FALSE;
+}
+
 
 static BOOL AudioSetup(struct MorseGen *mg, struct TagItem *taglist)
 {
 	struct AudioMorseGen *amg = (struct AudioMorseGen*)mg;
 
 	ParseTags(amg, taglist);
-	return TRUE;
+	return GetAudioPort(amg);
 }
 
 
@@ -65,6 +106,8 @@ static BOOL AudioSetup(struct MorseGen *mg, struct TagItem *taglist)
 *   void AudioCleanup(struct MorseGen*);
 *
 * FUNCTION
+*   - Frees audio message port.
+*   - Frees AudioMorseGen structure.
 *
 * INPUTS
 *   morsegen - control structure. Don't call with NULL.
@@ -79,7 +122,11 @@ static void AudioCleanup(struct MorseGen *mg)
 {
 	struct AudioMorseGen *amg = (struct AudioMorseGen*)mg;
 
+	if (amg->amg_Req1) DeleteIORequest(amg->amg_Req1);
+	if (amg->amg_Req0) DeleteIORequest(amg->amg_Req0);
+	if (amg->amg_Port) DeleteMsgPort(amg->amg_Port);
 	FreeMem(mg, sizeof(struct AudioMorseGen));
+	return;
 }
 
 
@@ -254,6 +301,17 @@ struct MorseGen* CreateAudioBackend(void)
 	struct AudioMorseGen *amg;
 	
 	amg = (struct AudioMorseGen*)AllocMem(sizeof(struct AudioMorseGen), MEMF_ANY | MEMF_CLEAR);
-	
+
+	if (amg)
+	{
+		amg->mg.mg_Setup = AudioSetup;
+		amg->mg.mg_Cleanup = AudioCleanup;
+		amg->mg.mg_IntraSymbolPause = AudioIntraSymbolPause;
+		amg->mg.mg_InterSymbolPause = AudioInterSymbolPause;
+		amg->mg.mg_InterWordPause = AudioInterWordPause;
+		amg->mg.mg_ShortTone = AudioShortTone;
+		amg->mg.mg_LongTone = AudioLongTone;
+	}
+
 	return &amg->mg;
 }
