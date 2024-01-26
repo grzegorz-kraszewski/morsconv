@@ -197,7 +197,6 @@ static BOOL OpenOutputFile(struct SvxMorseGen *mg)
 	{
 		if (mg->smg_OutputFile = Open(mg->smg_OutputPath, MODE_NEWFILE))
 		{
-			Printf("File $%08lx opened.\n", (LONG)mg->smg_OutputFile);
 			return OpenOutputIFF(mg);
 		}
 		else SetErr(RETURN_ERROR, IoErr());
