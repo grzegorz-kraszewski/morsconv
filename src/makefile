@@ -1,7 +1,7 @@
 CC = gcc
-LD = ld
-CFLAGS = -noixemul -nostdlib -O2 -fomit-frame-pointer -m68000 -mregparm=2 -D__NOLIBBASE__ -DUSE_INLINE_STDARG
-LDFLAGS = -noixemul -nostartfiles -nostdlib
+LD = gcc
+CFLAGS = -nostdlib -O2 -fbaserel -mregparm -msmall-code -D__NOLIBBASE__ -DUSE_INLINE_STDARG
+LDFLAGS = -nostartfiles -nostdlib -fbaserel 
 LIBS =
 OBJS = start.o main.o morsegen.o backend-stdout.o backend-8svx.o backend-count.o backend-audio.o
 SRCS = start.c main.c morsegen.c morsegen.h backend-stdout.c backend-8svx.c backend-count.c backend-audio.c
