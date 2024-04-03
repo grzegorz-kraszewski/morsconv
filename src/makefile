@@ -1,10 +1,10 @@
-CC = gcc
-LD = ld
-CFLAGS = -noixemul -nostdlib -O2 -fomit-frame-pointer -m68000 -mregparm=2 -D__NOLIBBASE__ -DUSE_INLINE_STDARG
-LDFLAGS = -noixemul -nostartfiles -nostdlib
-LIBS =
-OBJS = start.o main.o morsegen.o backend-stdout.o backend-8svx.o backend-count.o
-SRCS = start.c main.c morsegen.c morsegen.h backend-stdout.c backend-8svx.c backend-count.c
+CC = g++
+LD = g++
+CFLAGS = -nostdlib -O2 -fbaserel -fomit-frame-pointer -mregparm -fno-exceptions -fno-rtti -D__NOLIBBASE__
+LDFLAGS = -nostdlib -fbaserel -fomit-frame-pointer -nostartfiles
+LIBS = -lminteger -lmfloat -lmtransfloat
+OBJS = start.o main.o morsegen.o morsegenaudio.o backend-count.o backend-stdout.o backend-8svx.o \
+ backend-wave.o purevirtual.o
 EXE = MorsConv
 
 all: $(OBJS)
@@ -12,28 +12,31 @@ all: $(OBJS)
 	@$(LD) $(LDFLAGS) -o $(EXE).db $^ $(LIBS)
 	@strip $(EXE).db -o $(EXE) --strip-unneeded
 	@Protect $(EXE) +E
+	List $(EXE)
 
 clean:
 	rm -vf *.o $(EXE) $(EXE).db
 
-devdoc:
-	Join $(SRCS) TO T:$(EXE).sources
-	RoboDoc T:$(EXE).sources $(EXE)-Dev.guide GUIDE TOC SORT INTERNAL
-	Delete T:$(EXE).sources
-
-start.o: start.c
+start.o: start.cpp
 	@echo "Compiling $@..."
 	@$(CC) $(CFLAGS) -fwritable-strings -c -o $@ $<
 
-%.o: %.c
+purevirtual.o: purevirtual.c
+	@echo "Compiling $@..."
+	@gcc $(CFLAGS) -c -o $@ $<
+
+%.o: %.cpp
 	@echo "Compiling $@..."
 	@$(CC) $(CFLAGS) -c -o $@ $<
 
 # dependencies
 
-backend-8svx.o: backend-8svx.c main.h morsegen.h
-backend-count.o: backend-count.c main.h morsegen.h
-backend-stdout.o: backend-stdout.c main.h morsegen.h
-main.o: main.c main.h backend-stdout.h morsegen.h
-morsegen.o: morsegen.c main.h morsegen.h
-start.o: start.c
+backend-8svx.o: backend-8svx.cpp main.h backend-8svx.h morsegenaudio.h morsegen.h backend-count.h
+backend-count.o: backend-count.cpp main.h backend-count.h morsegen.h
+backend-stdout.o: backend-stdout.cpp backend-stdout.h main.h morsegen.h
+backend-wave.o: backend-wave.cpp main.h backend-wave.h morsegenaudio.h morsegen.h
+main.o: main.cpp main.h backend-stdout.h morsegen.h backend-count.h backend-8svx.h morsegenaudio.h \
+ backend-wave.h
+morsegen.o: morsegen.cpp morsegen.h main.h
+morsegenaudio.o: morsegenaudio.cpp main.h morsegenaudio.h morsegen.h
+start.o: start.cpp
