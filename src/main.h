@@ -1,3 +1,6 @@
+#ifndef MORSCONV_MAIN_H
+#define MORSCONV_MAIN_H
+
 extern struct Library
 	*SysBase,
 	*DOSBase,
@@ -6,25 +9,29 @@ extern struct Library
 	*MathIeeeSingTransBase,
 	*IFFParseBase;
 	
-extern ULONG MorErr;
-
-static inline SetErr(LONG retval, LONG ecode)
-{
-	MorErr = (retval << 16) | ecode;
-}
 
 #ifdef __mc68000__
 
 #define mul16(a,b) ({ \
-LONG _r; \
-WORD _a = (a), _b = (b); \
+long _r; \
+short _a = (a), _b = (b); \
 asm("MULS.W %2,%0": "=d" (_r): "0" (_a), "dmi" (_b): "cc"); \
 _r;})
 
 #define div16(a,b) ({ \
-WORD _r, _b = (b); \
-LONG _a = (a); \
+short _r, _b = (b); \
+long _a = (a); \
 asm("DIVS.W %2,%0": "=d" (_r): "0" (_a), "dmi" (_b): "cc"); \
+_r;})
+
+#define bswap16(a) ({ \
+short _r, _a = (a); \
+asm ("ROR.W #8,%0": "=d" (_r) : "0" (_a) : "cc"); \
+_r;})
+
+#define bswap32(a) ({ \
+long _r, _a = (a); \
+asm("ROR.W #8,%0; SWAP %0; ROR.W #8,%0" : "=d" (_r) : "0" (_a) : "cc"); \
 _r;})
 
 #else
@@ -34,3 +41,4 @@ _r;})
 
 #endif
 
+#endif  /* MORSCONV_MAIN_H */
