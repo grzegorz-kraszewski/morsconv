@@ -2,7 +2,7 @@ Short:        Modular Morse code generator
 Uploader:     software@rastport.com (RastPort)
 Author:       software@rastport.com (RastPort)
 Type:         text/misc
-Version:      2.2
+Version:      2.3
 Architecture: m68k-amigaos >= 3.0
 
 MorsConv is a modular Morse code generator. It is a shell command (has no
@@ -13,7 +13,8 @@ capitalized before conversion.
 Modules:
   CON     replaces Morse code elements with arbitrary strings
   COUNT   counts Morse code elements
-  8SVX    generates IFF 8SVX audio file
+  8SVX    generates IFF 8SVX audio file (PCM, mono, 8 bits)
+  WAVE    generates RIFF WAVE audio file (PCM, mono, 16 bits)
 
 MorsConv is an open source software hosted on GitHub. Repository is
 grzegorz-kraszewski/morsconv.
@@ -21,6 +22,10 @@ grzegorz-kraszewski/morsconv.
 For program usage see AmigaGuide file inside the archive.
  
 Version history
+
+2.3 (03.04.2024)
+  * Added WAVE module.
+  * Program rewritten in C++.
 
 2.2 (10.01.2024)
   * Implemented Farnsworth timing for 8SVX mode, added REALWPM argument.
