@@ -7,8 +7,7 @@
 //----------------------------------------------------------------------------------------------
 
 AudioDevMorseGen::AudioDevMorseGen(long srate, long pitch, long wpm, long rwpm, long attack,
- long release, long *metrics) : AudioMorseGen(srate, pitch, wpm, rwpm, attack, release,
- metrics)
+ long release) : AudioMorseGen(srate, pitch, wpm, rwpm, attack, release, NULL)
 {
 	DotTone = NULL;
 

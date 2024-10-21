@@ -12,8 +12,7 @@ class AudioDevMorseGen : public AudioMorseGen
 
 	public:
 
-	AudioDevMorseGen(long srate, long pitch, long wpm, long rwpm, long attack, long release,
-	 long *metrics);
+	AudioDevMorseGen(long srate, long pitch, long wpm, long rwpm, long attack, long release);
 	void IntraSymbolPause() {}
 	void InterSymbolPause() {}
 	void InterWordPause() {} 

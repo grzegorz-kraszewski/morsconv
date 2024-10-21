@@ -65,14 +65,16 @@ struct GenDesc
 #define GENERATOR_CON    1
 #define GENERATOR_8SVX   2
 #define GENERATOR_WAVE   3
+#define GENERATOR_AUDIO  4
 
-#define GENERATORS       4       
+#define GENERATORS       5       
 
 GenDesc Generators[GENERATORS] = {
 	{ "COUNT", FALSE },
 	{ "CON", FALSE },
 	{ "8SVX", TRUE },
-	{ "WAVE", TRUE }
+	{ "WAVE", TRUE },
+	{ "AUDIO", FALSE }
 };
 
 
@@ -151,6 +153,16 @@ static MorseGen* CreateGenerator(long mode, long *argvals, long *metrics)
 				*(long*)argvals[MCARG_RELEASE],
 				(char*)argvals[MCARG_TO],
 				metrics);
+		break;
+
+		case GENERATOR_AUDIO:
+			generator = new AudioDevMorseGen(
+				*(long*)argvals[MCARG_SAMPRATE],
+				*(long*)argvals[MCARG_PITCH],
+				*(long*)argvals[MCARG_WPM],
+				*(long*)argvals[MCARG_REALWPM],
+				*(long*)argvals[MCARG_ATTACK],
+				*(long*)argvals[MCARG_RELEASE]);
 		break;
 	}
 
