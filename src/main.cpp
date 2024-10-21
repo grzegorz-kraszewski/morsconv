@@ -11,6 +11,7 @@
 #include "backend-count.h"
 #include "backend-8svx.h"
 #include "backend-wave.h"
+#include "backend-audio.h"
 
 /* indexes of commandline arguments array */
 
