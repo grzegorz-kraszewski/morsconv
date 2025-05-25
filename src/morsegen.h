@@ -18,6 +18,7 @@ class MorseGen
 	virtual void InterWordPause() = 0;
 	virtual void ShortTone() = 0;
 	virtual void LongTone() = 0;
+	virtual void FlushBuffers() {};        // AudioDevMorseGen overrides it
 	long MorseText(const char *text);
 	virtual ~MorseGen();
 };

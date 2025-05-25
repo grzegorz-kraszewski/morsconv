@@ -126,7 +126,8 @@ LONG MorseGen::MorseText(const char *text)
 		}
 		else skipped++;
 	}
-	
+
+	FlushBuffers();
 	return skipped;
 }
 
