@@ -1,10 +1,10 @@
 @DATABASE MorsConv.guide
-@$VER: MorsConv.guide 2.3 (03.04.2024)
+@$VER: MorsConv.guide 3.0 (25.05.2025)
 @AUTHOR: RastPort
 @WORDWRAP
 @WIDTH 80
 @NODE Main "MorsConv"
-@{B}MorsConv 2.3@{UB}
+@{B}MorsConv 3.0@{UB}
 
 MorsConv is a modular Morse code generator. It can convert a text, given as commandline argument, to various forms of Morse code. MorsConv is a shell command, it has no GUI.
 
@@ -26,6 +26,7 @@ Following optional arguments can be used to modify the output form of Morse code
 
 @{B}Output modes@{UB}
 
+  @{" AUDIO " LINK modaudio}  Plays Morse code as audio using audio.device.
   @{" CON   " LINK modcon}  Replaces Morse code elements with texts.
   @{" COUNT " LINK modcount}  Counts Morse code elements.
   @{" 8SVX  " LINK mod8svx}  Generates IFF 8SVX audio file.
@@ -135,6 +136,34 @@ ATTACK - Attack phase of the symbol envelope in miliseconds. Optional. Allowed r
 RELEASE - Release phase of the symbol envelope in miliseconds. Optional. Allowed range: 0 - 50. Default 1.
  
 @{B}Notes@{UB}
+
+Each symbol starts at sine zero crossing. An end of a symbol may be not at zero crossing, and the wave is cut hard. It creates a nasty click. That is why default envelope release time is set to 1 ms, not 0, so the click is suppressed.
+
+@ENDNODE
+@NODE modaudio "AUDIO mode"
+@{B}AUDIO@{UB}
+
+Plays Morse code as audio using audio.device. It usually means it uses Paula chip. Audio is monophonic, played on one left and one right channel of four. Audio preserves standard timings with optional extension of pauses according to Farnsworth timing. Sine waveform is used. An ASR envelope is applied to each symbol.
+
+@{B}Control arguments@{UB}
+
+SAMPLERATE=SR - Sampling rate of audio in Hz. Optional. Allowed range: 1000 - 65536. Default: 8000.
+
+PITCH - Tone pitch in Hz. Optional. Allowed range: 100 - 8000. Default: 500. Additional upper limit is sampling rate / 4.
+
+WPM - Speed of the code in words per minute, based on PARIS word. Optional. Allowed range: 5 - 100. Default 20.
+
+REALWPM - Enable Farnsworth timing. Characters are sent at speed specified by WPM. Pauses between characters and words are extended proportionally to obtain average REALWPM code speed. Optional argument, default value is equal to WPM (standard timing). Allowed range: 5 to 100, but must be less than or equal to WPM.
+
+ATTACK - Attack phase of the symbol envelope in miliseconds. Optional. Allowed range: 0 - 50. Default 0.
+
+RELEASE - Release phase of the symbol envelope in miliseconds. Optional. Allowed range: 0 - 50. Default 1.
+ 
+@{B}Notes@{UB}
+
+Sampling rate is rounded up to the nearest Paula sampling rate. For example, for 22050 Hz sampling rate, the nearest Paula audio period is 160 on PAL machine, so the exact sampling rate is 22168 Hz. As there is no correction of pitch and speed, they will be 0.5% higher/faster than specified. On the other hand PAL/NTSC is detected and correction for different master clock is applied.
+
+Depending on display mode used, sampling rates above 27 kHz may result in distorted audio. It is a known fact, affecting any audio player using Paula as output.
 
 Each symbol starts at sine zero crossing. An end of a symbol may be not at zero crossing, and the wave is cut hard. It creates a nasty click. That is why default envelope release time is set to 1 ms, not 0, so the click is suppressed.
 
