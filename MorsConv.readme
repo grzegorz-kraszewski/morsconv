@@ -2,7 +2,7 @@ Short:        Modular Morse code generator
 Uploader:     software@rastport.com (RastPort)
 Author:       software@rastport.com (RastPort)
 Type:         text/misc
-Version:      2.3
+Version:      3.0
 Architecture: m68k-amigaos >= 3.0
 
 MorsConv is a modular Morse code generator. It is a shell command (has no
@@ -11,6 +11,7 @@ concept of capital and small letters, all the text is automatically
 capitalized before conversion.
 
 Modules:
+  AUDIO   plays Morse code as audio using audio.device.
   CON     replaces Morse code elements with arbitrary strings
   COUNT   counts Morse code elements
   8SVX    generates IFF 8SVX audio file (PCM, mono, 8 bits)
@@ -22,6 +23,9 @@ grzegorz-kraszewski/morsconv.
 For program usage see AmigaGuide file inside the archive.
  
 Version history
+
+3.0 (25.05.2025)
+  * Added AUDIO module.
 
 2.3 (03.04.2024)
   * Added WAVE module.

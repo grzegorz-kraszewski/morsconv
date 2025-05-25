@@ -58,7 +58,7 @@ metrics)
 }
 
 /*--------------------------------------------------------------------------------------------*/
-    
+
 short SvxMorseGen::InitStream()
 {
 	if (File = Open(OutputPath, MODE_NEWFILE))

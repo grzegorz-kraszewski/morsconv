@@ -94,7 +94,7 @@ void AudioMorseGen::CalculateFarnsworthPauses()
 {
 	long alpha, beta, cpauseplus, wpauseplus;
 
-	alpha = SampleRate * 60 * (Wpm - RealWpm);	
+	alpha = SampleRate * 60 * (Wpm - RealWpm);
 	beta = mul16(mul16(Wpm, RealWpm), 19);
 	cpauseplus = alpha * 3 / beta;
 	wpauseplus = alpha * 7 / beta;
@@ -110,7 +110,7 @@ void AudioMorseGen::GenerateTone8(signed char *buffer, long count, long samprate
 	float step;
 
 	step = TWO_PI / samprate * pitch;
- 
+
 	for (i = 0; i < count; i++)
 	{
 		float x;
@@ -128,7 +128,7 @@ void AudioMorseGen::GenerateTone16(short *buffer, long count, long samprate, lon
 	float step;
 
 	step = TWO_PI / samprate * pitch;
- 
+
 	for (i = 0; i < count; i++)
 	{
 		float x;
