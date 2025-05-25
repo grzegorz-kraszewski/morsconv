@@ -35,7 +35,7 @@ class AudioMorseGen : public MorseGen
 	public:
 
 	AudioMorseGen(long srate, long pitch, long wpm, long rwpm, long attack, long release, long *metrics);
-	~AudioMorseGen();
+	virtual ~AudioMorseGen();
 };
 
 #endif  /* MORSCONV_MORSEGENAUDIO_H */
