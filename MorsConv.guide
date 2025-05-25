@@ -161,6 +161,8 @@ RELEASE - Release phase of the symbol envelope in miliseconds. Optional. Allowed
  
 @{B}Notes@{UB}
 
+Playback may be stopped with CTRL+C keys, or by sending CTRL+C signal to the process.
+
 Sampling rate is rounded up to the nearest Paula sampling rate. For example, for 22050 Hz sampling rate, the nearest Paula audio period is 160 on PAL machine, so the exact sampling rate is 22168 Hz. As there is no correction of pitch and speed, they will be 0.5% higher/faster than specified. On the other hand PAL/NTSC is detected and correction for different master clock is applied.
 
 Depending on display mode used, sampling rates above 27 kHz may result in distorted audio. It is a known fact, affecting any audio player using Paula as output.
