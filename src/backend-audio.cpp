@@ -79,7 +79,7 @@ static void BeginIO(IOAudio *req)
 
 AudioDevMorseGen::AudioDevMorseGen(long srate, long pitch, long wpm, long rwpm, long attack,
  long release) : AudioMorseGen(srate, pitch, wpm, rwpm, attack, release, NULL), port(NULL),
- request(NULL), bufferA(NULL), bufferB(NULL), started(FALSE)
+ request(NULL), bufferA(NULL), bufferB(NULL)
 {
 	UBYTE channelPatterns[4] = { 3, 5, 10, 12 };   // one left + one right
 	LONG masterClock = 3546895;                    // PAL
@@ -113,8 +113,6 @@ AudioDevMorseGen::AudioDevMorseGen(long srate, long pitch, long wpm, long rwpm, 
 				{
 					if (OpenDevice("audio.device", 0, (IORequest*)request, 0) == 0)
 					{
-						leftChannel = (LONG)request->ioa_Request.io_Unit & LEFT_CHANNELS_MASK;
-						rightChannel = (LONG)request->ioa_Request.io_Unit & RIGHT_CHANNELS_MASK;
 						if (((ExecBase*)SysBase)->VBlankFrequency == 60) masterClock =  3579545;   // NTSC
 						period = divu16(masterClock, SampleRate);
 						bufferA->Initialize(request, period);
@@ -158,6 +156,7 @@ void AudioDevMorseGen::StopChannels()
 	request->ioa_Request.io_Command = CMD_STOP;
 	request->ioa_Request.io_Flags = IOF_QUICK;
 	BeginIO(request);
+	started = FALSE;
 }
 
 //=============================================================================================
@@ -247,15 +246,25 @@ void AudioDevMorseGen::PushAudio(LONG samples, signed char *source)
 void AudioDevMorseGen::WaitForBuffers()
 {
 	IOAudio *returnedReq;
+	ULONG signals, portmask = 1 << port->mp_SigBit;
 
-	WaitPort(port);
+	signals = Wait(portmask | SIGBREAKF_CTRL_C);
 
-	while (returnedReq = (IOAudio*)GetMsg(port))
+	if (signals & portmask)
 	{
-		if (returnedReq == &bufferA->requestL) bufferA->status &= ~AUDIO_PLAY_L;
-		else if (returnedReq == &bufferA->requestR) bufferA->status &= ~AUDIO_PLAY_R;
-		else if (returnedReq == &bufferB->requestL) bufferB->status &= ~AUDIO_PLAY_L;
-		else if (returnedReq == &bufferB->requestR) bufferB->status &= ~AUDIO_PLAY_R;
+		while (returnedReq = (IOAudio*)GetMsg(port))
+		{
+			if (returnedReq == &bufferA->requestL) bufferA->status &= ~AUDIO_PLAY_L;
+			else if (returnedReq == &bufferA->requestR) bufferA->status &= ~AUDIO_PLAY_R;
+			else if (returnedReq == &bufferB->requestL) bufferB->status &= ~AUDIO_PLAY_L;
+			else if (returnedReq == &bufferB->requestR) bufferB->status &= ~AUDIO_PLAY_R;
+		}
+	}
+
+	if (signals & SIGBREAKF_CTRL_C)
+	{
+		PutStr("Break! Waiting for audio to complete...\n");
+		Stop = TRUE;
 	}
 }
 

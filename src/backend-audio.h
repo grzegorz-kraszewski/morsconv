@@ -9,7 +9,7 @@
 #define AUDIO_FREE      0
 #define AUDIO_FAILED    8
 
-#define AUDIO_BUFSIZE 16384
+#define AUDIO_BUFSIZE 8192
 
 #define LEFT_CHANNELS_MASK    6
 #define RIGHT_CHANNELS_MASK   9
@@ -45,8 +45,6 @@ class AudioDevMorseGen : public AudioMorseGen
 	AudioBuffer *bufferA;
 	AudioBuffer *bufferB;
 	MsgPort *port;
-	LONG leftChannel;
-	LONG rightChannel;
 	LONG period;
 	LONG started;
 
