@@ -24,6 +24,12 @@ long _a = (a); \
 asm("DIVS.W %2,%0": "=d" (_r): "0" (_a), "dmi" (_b): "cc"); \
 _r;})
 
+#define divu16(a,b) ({ \
+unsigned short _r, _b = (b); \
+unsigned long _a = (a); \
+asm("DIVU.W %2,%0": "=d" (_r): "0" (_a), "dmi" (_b): "cc"); \
+_r;})
+
 #define bswap16(a) ({ \
 short _r, _a = (a); \
 asm ("ROR.W #8,%0": "=d" (_r) : "0" (_a) : "cc"); \
