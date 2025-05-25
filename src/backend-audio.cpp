@@ -9,11 +9,11 @@
 // AudioBuffer::AudioBuffer()
 //=============================================================================================
 
-AudioBuffer::AudioBuffer(MsgPort *port) : status(FAILED), audio(NULL), level(0)
+AudioBuffer::AudioBuffer(MsgPort *port) : status(AUDIO_FAILED), audio(NULL), level(0)
 {
 	if (audio = (signed char*)AllocMem(AUDIO_BUFSIZE, MEMF_CHIP))
 	{
-		status = UNUSED;
+		status = AUDIO_UNUSED;
 	}
 	else PutStr("audio generator: out of memory\n");
 }
@@ -24,10 +24,16 @@ AudioBuffer::AudioBuffer(MsgPort *port) : status(FAILED), audio(NULL), level(0)
 
 AudioBuffer::~AudioBuffer()
 {
-	if (status == PLAYING)
+	if (status & AUDIO_PLAY_L)
 	{
-		AbortIO((IORequest*)&request);
-		WaitIO((IORequest*)&request);
+		AbortIO((IORequest*)&requestL);
+		WaitIO((IORequest*)&requestL);
+	}
+
+	if (status & AUDIO_PLAY_R)
+	{
+		AbortIO((IORequest*)&requestR);
+		WaitIO((IORequest*)&requestR);
 	}
 
 	if (audio) FreeMem(audio, AUDIO_BUFSIZE);
@@ -39,16 +45,20 @@ AudioBuffer::~AudioBuffer()
 
 void AudioBuffer::Initialize(IOAudio *master, LONG per)
 {
-	CopyMem(master, &request, sizeof(IOAudio));
-	request.ioa_Request.io_Unit = (Unit*)((ULONG)request.ioa_Request.io_Unit &
+	CopyMem(master, &requestL, sizeof(IOAudio));
+	requestL.ioa_Volume = 64;
+	requestL.ioa_Period = per;
+	requestL.ioa_Cycles = 1;
+	requestL.ioa_Data = (UBYTE*)audio;
+	requestL.ioa_Length = AUDIO_BUFSIZE;
+	requestL.ioa_Request.io_Flags = ADIOF_PERVOL;
+	requestL.ioa_Request.io_Command = CMD_WRITE;
+	CopyMem(&requestL, &requestR, sizeof(IOAudio));
+
+	requestL.ioa_Request.io_Unit = (Unit*)((ULONG)requestL.ioa_Request.io_Unit &
 		LEFT_CHANNELS_MASK);
-	request.ioa_Volume = 64;
-	request.ioa_Period = per;
-	request.ioa_Cycles = 1;
-	request.ioa_Data = (UBYTE*)audio;
-	request.ioa_Length = AUDIO_BUFSIZE;
-	request.ioa_Request.io_Flags = ADIOF_PERVOL;
-	request.ioa_Request.io_Command = CMD_WRITE;
+	requestR.ioa_Request.io_Unit = (Unit*)((ULONG)requestR.ioa_Request.io_Unit &
+		RIGHT_CHANNELS_MASK);
 }
 
 //=============================================================================================
@@ -69,7 +79,7 @@ static void BeginIO(IOAudio *req)
 
 AudioDevMorseGen::AudioDevMorseGen(long srate, long pitch, long wpm, long rwpm, long attack,
  long release) : AudioMorseGen(srate, pitch, wpm, rwpm, attack, release, NULL), port(NULL),
- request(NULL), bufferA(NULL), bufferB(NULL)
+ request(NULL), bufferA(NULL), bufferB(NULL), started(FALSE)
 {
 	UBYTE channelPatterns[4] = { 3, 5, 10, 12 };   // one left + one right
 	LONG masterClock = 3546895;                    // PAL
@@ -97,9 +107,9 @@ AudioDevMorseGen::AudioDevMorseGen(long srate, long pitch, long wpm, long rwpm, 
 			request->ioa_Data = channelPatterns;
 			request->ioa_Length = sizeof(channelPatterns);
 
-			if ((bufferA = new AudioBuffer(port)) && (bufferA->status == UNUSED))
+			if ((bufferA = new AudioBuffer(port)) && (bufferA->status == AUDIO_UNUSED))
 			{
-				if ((bufferB = new AudioBuffer(port)) && (bufferB->status == UNUSED))
+				if ((bufferB = new AudioBuffer(port)) && (bufferB->status == AUDIO_UNUSED))
 				{
 					if (OpenDevice("audio.device", 0, (IORequest*)request, 0) == 0)
 					{
@@ -109,6 +119,7 @@ AudioDevMorseGen::AudioDevMorseGen(long srate, long pitch, long wpm, long rwpm, 
 						period = divu16(masterClock, SampleRate);
 						bufferA->Initialize(request, period);
 						bufferB->Initialize(request, period);
+						StopChannels();
 						Initialized = TRUE;
 					}
 					else PutStr("audio generator: can't open audio.device.\n");
@@ -131,7 +142,37 @@ AudioDevMorseGen::~AudioDevMorseGen()
 	if (bufferA) delete bufferA;
 	if (bufferB) delete bufferB;
 	if (Initialized) CloseDevice((IORequest*)request);
+	if (request) DeleteIORequest(request);
 	if (port) DeleteMsgPort(port);
+}
+
+//=============================================================================================
+// AudioDevMorseGen::StopChannels()
+//---------------------------------------------------------------------------------------------
+// Preparation for synchronous start of stereo channels. It uses the master IOAudio in
+// synchronous manner.
+//=============================================================================================
+
+void AudioDevMorseGen::StopChannels()
+{
+	request->ioa_Request.io_Command = CMD_STOP;
+	request->ioa_Request.io_Flags = IOF_QUICK;
+	BeginIO(request);
+}
+
+//=============================================================================================
+// AudioDevMorseGen::StartChannels()
+//---------------------------------------------------------------------------------------------
+// Preparation for synchronous start of stereo channels. It uses the master IOAudio in
+// synchronous manner.
+//=============================================================================================
+
+void AudioDevMorseGen::StartChannels()
+{
+	request->ioa_Request.io_Command = CMD_START;
+	request->ioa_Request.io_Flags = IOF_QUICK;
+	BeginIO(request);
+	started = TRUE;
 }
 
 //=============================================================================================
@@ -162,6 +203,20 @@ short AudioDevMorseGen::PrepareBuffers()
 	return FALSE;
 }
 
+//=============================================================================================
+// SendBuffer()
+//=============================================================================================
+
+void AudioDevMorseGen::SendBuffer(AudioBuffer *buffer)
+{
+	buffer->requestL.ioa_Length = buffer->level;
+	buffer->requestR.ioa_Length = buffer->level;
+	BeginIO(&buffer->requestL);
+	BeginIO(&buffer->requestR);
+	if (!started) StartChannels();
+	buffer->status = AUDIO_PLAY;
+	buffer->level = 0;
+}
 
 //=============================================================================================
 // AudioDevMorseGen::PushAudio()
@@ -181,12 +236,7 @@ void AudioDevMorseGen::PushAudio(LONG samples, signed char *source)
 		CopyMem(source + sourcePosition, buffer->audio + buffer->level, samplesToCopy);
 		buffer->level += samplesToCopy;
 		sourcePosition += samplesToCopy;
-
-		if (buffer->Full())
-		{
-			BeginIO(&buffer->request);
-			buffer->status = PLAYING;
-		}
+		if (buffer->Full()) SendBuffer(buffer);
 	}
 }
 
@@ -202,8 +252,10 @@ void AudioDevMorseGen::WaitForBuffers()
 
 	while (returnedReq = (IOAudio*)GetMsg(port))
 	{
-		if (returnedReq == &bufferA->request) bufferA->SetFree();
-		else if (returnedReq == &bufferB->request) bufferB->SetFree();
+		if (returnedReq == &bufferA->requestL) bufferA->status &= ~AUDIO_PLAY_L;
+		else if (returnedReq == &bufferA->requestR) bufferA->status &= ~AUDIO_PLAY_R;
+		else if (returnedReq == &bufferB->requestL) bufferB->status &= ~AUDIO_PLAY_L;
+		else if (returnedReq == &bufferB->requestR) bufferB->status &= ~AUDIO_PLAY_R;
 	}
 }
 
@@ -238,24 +290,14 @@ void AudioDevMorseGen::FlushBuffers()
 	// send out partially filled last buffer 
 	//---------------------------------------
 
-	if ((bufferA->Available()) && (bufferA->level > 0))
-	{
-		bufferA->request.ioa_Length = bufferA->level;
-		BeginIO(&bufferA->request);
-		bufferA->status = PLAYING;
-	}
-	else if ((bufferB->Available()) && (bufferB->level > 0))
-	{
-		bufferB->request.ioa_Length = bufferB->level;
-		BeginIO(&bufferB->request);
-		bufferB->status = PLAYING;
-	}
+	if ((bufferA->Available()) && (bufferA->level > 0)) SendBuffer(bufferA);
+	else if ((bufferB->Available()) && (bufferB->level > 0)) SendBuffer(bufferB);
 
 	//---------------------------------------
 	// wait for any playing buffer to finish
 	//---------------------------------------
 
-	while ((bufferA->status == PLAYING) || (bufferB->status == PLAYING))
+	while (!(bufferA->Available() && bufferB->Available()))
 	{
 		WaitForBuffers();
 	}
