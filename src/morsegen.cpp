@@ -109,7 +109,7 @@ LONG MorseGen::MorseText(const char *text)
 	LONG skipped = 0;
 	BOOL start_of_word = TRUE;
 
-	while (current_letter = *text++)
+	while (!Stop && (current_letter = *text++))
 	{
 		const char *morse;
 
@@ -127,7 +127,7 @@ LONG MorseGen::MorseText(const char *text)
 		else skipped++;
 	}
 
-	FlushBuffers();
+	FlushBuffers();      // AUDIO module uses it
 	return skipped;
 }
 

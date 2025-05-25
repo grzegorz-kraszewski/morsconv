@@ -12,7 +12,9 @@ class MorseGen
 	public:
 
 	short Initialized;
-	MorseGen() { Initialized = FALSE; }
+	short Stop;         // flag set to TRUE by realtime converters on CTRL+C
+
+	MorseGen() { Initialized = FALSE; Stop = FALSE; }
 	virtual void IntraSymbolPause() = 0;
 	virtual void InterSymbolPause() = 0;
 	virtual void InterWordPause() = 0;
