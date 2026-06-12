@@ -1,11 +1,7 @@
 # morsconv
 Modular converter of text to various forms of Morse code. Shell command, no GUI. AmigaOS 3.x, M68000.
 
-## Available output modes
-* `AUDIO` - Outputs Morse code as realtime audio using `audio.device`.
-* `CON` – Outputs Morse code as text to standard output using arbitrary strings for Morse elements.
-* `COUNT` – Counts all the elements of Morse code for given text and print counters to the standard output.
-* `8SVX` – Generates IFF 8SVX audio file (8-bit, mono).
-* `WAVE` – Generates RIFF WAVE audio file (16-bit, mono).
+## Moved to Codeberg
+No active development here, this repository will be deleted in the future.
 
-See AmigaGuide manual (`MorsConv.guide`) for details.
+[current repository](https://codeberg.org/krashan/morsconv)
